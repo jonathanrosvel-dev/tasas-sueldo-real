@@ -1,15 +1,36 @@
 {
-  "version": "TEST-02",
+  "version": "2026-04-25",
   "fechaActualizacion": "2026-04-25",
   "utm": 69889,
   "afp": [
-    { "nombre": "Capital", "comision": 0.0144 },
-    { "nombre": "Cuprum", "comision": 0.0144 },
-    { "nombre": "Habitat", "comision": 0.0127 },
-    { "nombre": "Modelo", "comision": 0.0058 },
-    { "nombre": "PlanVital", "comision": 0.0116 },
-    { "nombre": "Provida", "comision": 0.0145 },
-    { "nombre": "Uno", "comision": 0.0049 }
+    {
+      "nombre": "Capital",
+      "comision": 0.0144
+    },
+    {
+      "nombre": "Cuprum",
+      "comision": 0.0144
+    },
+    {
+      "nombre": "Habitat",
+      "comision": 0.0127
+    },
+    {
+      "nombre": "Modelo",
+      "comision": 0.0058
+    },
+    {
+      "nombre": "PlanVital",
+      "comision": 0.0116
+    },
+    {
+      "nombre": "Provida",
+      "comision": 0.0145
+    },
+    {
+      "nombre": "Uno",
+      "comision": 0.0049
+    }
   ],
   "salud": {
     "fonasa": 0.07
@@ -19,14 +40,59 @@
   },
   "impuestoUnico": {
     "tramos": [
-      { "desdeUtm": 0, "hastaUtm": 13.5, "factor": 0.0, "rebajaUtm": 0.0 },
-      { "desdeUtm": 13.5, "hastaUtm": 30, "factor": 0.04, "rebajaUtm": 0.54 },
-      { "desdeUtm": 30, "hastaUtm": 50, "factor": 0.08, "rebajaUtm": 1.74 },
-      { "desdeUtm": 50, "hastaUtm": 70, "factor": 0.135, "rebajaUtm": 4.49 },
-      { "desdeUtm": 70, "hastaUtm": 90, "factor": 0.23, "rebajaUtm": 11.14 },
-      { "desdeUtm": 90, "hastaUtm": 120, "factor": 0.304, "rebajaUtm": 17.8 },
-      { "desdeUtm": 120, "hastaUtm": 310, "factor": 0.35, "rebajaUtm": 23.32 },
-      { "desdeUtm": 310, "hastaUtm": null, "factor": 0.40, "rebajaUtm": 38.82 }
+      {
+        "desdeUtm": 0,
+        "hastaUtm": 13.5,
+        "factor": 0.0,
+        "rebajaUtm": 0.0
+      },
+      {
+        "desdeUtm": 13.5,
+        "hastaUtm": 30,
+        "factor": 0.04,
+        "rebajaUtm": 0.54
+      },
+      {
+        "desdeUtm": 30,
+        "hastaUtm": 50,
+        "factor": 0.08,
+        "rebajaUtm": 1.74
+      },
+      {
+        "desdeUtm": 50,
+        "hastaUtm": 70,
+        "factor": 0.135,
+        "rebajaUtm": 4.49
+      },
+      {
+        "desdeUtm": 70,
+        "hastaUtm": 90,
+        "factor": 0.23,
+        "rebajaUtm": 11.14
+      },
+      {
+        "desdeUtm": 90,
+        "hastaUtm": 120,
+        "factor": 0.304,
+        "rebajaUtm": 17.8
+      },
+      {
+        "desdeUtm": 120,
+        "hastaUtm": 310,
+        "factor": 0.35,
+        "rebajaUtm": 23.32
+      },
+      {
+        "desdeUtm": 310,
+        "hastaUtm": null,
+        "factor": 0.4,
+        "rebajaUtm": 38.82
+      }
     ]
+  },
+  "fuentes": {
+    "utm": "https://www.sii.cl/valores_y_fechas/utm/utm2026.htm",
+    "impuestoUnico": "https://www.sii.cl/valores_y_fechas/impuesto_2da_categoria/impuesto2026.htm",
+    "afp": "https://www.spensiones.cl/infoydec"
   }
 }
