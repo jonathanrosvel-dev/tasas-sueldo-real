@@ -77,7 +77,17 @@ def obtener_utm_actual():
 
 def obtener_afp_actuales(afp_respaldo):
     try:
-        html = requests.get(AFP_URL, timeout=25).text
+        html = None
+
+        for intento in range(3):
+            try:
+                html = requests.get(AFP_URL, timeout=60).text
+                break
+            except Exception as e:
+                print(f"Intento AFP {intento + 1} falló: {e}")
+        
+        if html is None:
+            raise RuntimeError("No se pudo conectar con la fuente AFP después de 3 intentos")
         soup = BeautifulSoup(html, "html.parser")
         texto = soup.get_text(" ", strip=True)
 
