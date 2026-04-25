@@ -192,13 +192,43 @@ def obtener_tramos_impuesto_actual(anio, mes, utm):
             "rebajaUtm": round(rebaja_pesos / utm, 6)
         })
 
-    if len(tramos) < 8:
-        raise RuntimeError(f"No se pudieron extraer correctamente los tramos mensuales. Tramos encontrados: {len(tramos)}")
-
-    tramos[0]["desdeUtm"] = 0
+        
+    # --- POST PROCESO DE TRAMOS ---
+    
+    # Si faltó el tramo exento
+    if len(tramos) == 7:
+        print("Solo se encontraron 7 tramos. Se agregará tramo exento automáticamente.")
+    
+        tramo_exento = {
+            "desdeUtm": 0,
+            "hastaUtm": 13.5,
+            "factor": 0.0,
+            "rebajaUtm": 0.0
+        }
+    
+        tramos.insert(0, tramo_exento)
+    
+    # Validación mínima
+    if len(tramos) < 7:
+        raise RuntimeError(
+            f"Error grave: se extrajeron muy pocos tramos ({len(tramos)})"
+        )
+    
+    # Normalizar siempre a 8 tramos
+    tramos = tramos[:8]
+    
+    # Forzar primer tramo correcto (exento)
+    tramos[0] = {
+        "desdeUtm": 0,
+        "hastaUtm": 13.5,
+        "factor": 0.0,
+        "rebajaUtm": 0.0
+    }
+    
+    # Forzar último tramo abierto
     tramos[-1]["hastaUtm"] = None
-
-    return tramos[:8]
+    
+    return tramos
 
 
 def obtener_afp_actuales(afp_respaldo):
