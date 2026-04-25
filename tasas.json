@@ -98,7 +98,7 @@
   "estadoActualizacion": {
     "utm": "online",
     "impuestoUnico": "online",
-    "afp": "online"
+    "afp": "respaldo"
   },
   "fuentes": {
     "utm": "https://www.sii.cl/valores_y_fechas/utm/utm2026.htm",
