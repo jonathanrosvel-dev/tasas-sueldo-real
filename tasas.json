@@ -1,6 +1,11 @@
 {
   "version": "2026-04-25",
   "fechaActualizacion": "2026-04-25",
+  "periodo": {
+    "anio": 2026,
+    "mes": 4,
+    "mesNombre": "Abril"
+  },
   "utm": 69889,
   "afp": [
     {
@@ -89,6 +94,11 @@
         "rebajaUtm": 38.82
       }
     ]
+  },
+  "estadoActualizacion": {
+    "utm": "online",
+    "impuestoUnico": "respaldo",
+    "afp": "respaldo"
   },
   "fuentes": {
     "utm": "https://www.sii.cl/valores_y_fechas/utm/utm2026.htm",
