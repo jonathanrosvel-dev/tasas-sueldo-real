@@ -10,7 +10,7 @@
   "afp": [
     {
       "nombre": "Capital",
-      "comision": 0.0144
+      "comision": 0.0046
     },
     {
       "nombre": "Cuprum",
@@ -34,7 +34,7 @@
     },
     {
       "nombre": "Uno",
-      "comision": 0.0049
+      "comision": 0.0046
     }
   ],
   "salud": {
@@ -53,42 +53,42 @@
       },
       {
         "desdeUtm": 13.5,
-        "hastaUtm": 30,
+        "hastaUtm": 30.0,
         "factor": 0.04,
         "rebajaUtm": 0.54
       },
       {
-        "desdeUtm": 30,
-        "hastaUtm": 50,
+        "desdeUtm": 30.0,
+        "hastaUtm": 50.0,
         "factor": 0.08,
         "rebajaUtm": 1.74
       },
       {
-        "desdeUtm": 50,
-        "hastaUtm": 70,
+        "desdeUtm": 50.0,
+        "hastaUtm": 70.0,
         "factor": 0.135,
         "rebajaUtm": 4.49
       },
       {
-        "desdeUtm": 70,
-        "hastaUtm": 90,
+        "desdeUtm": 70.0,
+        "hastaUtm": 90.0,
         "factor": 0.23,
         "rebajaUtm": 11.14
       },
       {
-        "desdeUtm": 90,
-        "hastaUtm": 120,
+        "desdeUtm": 90.0,
+        "hastaUtm": 120.0,
         "factor": 0.304,
         "rebajaUtm": 17.8
       },
       {
-        "desdeUtm": 120,
-        "hastaUtm": 310,
+        "desdeUtm": 120.0,
+        "hastaUtm": 310.0,
         "factor": 0.35,
         "rebajaUtm": 23.32
       },
       {
-        "desdeUtm": 310,
+        "desdeUtm": 310.0,
         "hastaUtm": null,
         "factor": 0.4,
         "rebajaUtm": 38.82
@@ -97,8 +97,8 @@
   },
   "estadoActualizacion": {
     "utm": "online",
-    "impuestoUnico": "respaldo",
-    "afp": "respaldo"
+    "impuestoUnico": "online",
+    "afp": "online"
   },
   "fuentes": {
     "utm": "https://www.sii.cl/valores_y_fechas/utm/utm2026.htm",
