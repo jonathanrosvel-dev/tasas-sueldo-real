@@ -5,8 +5,6 @@ from datetime import date
 import requests
 from bs4 import BeautifulSoup
 
-SII_UTM_URL = "https://www.sii.cl/valores_y_fechas/utm/utm2026.htm"
-SII_IMPUESTO_URL = "https://www.sii.cl/valores_y_fechas/impuesto_2da_categoria/impuesto2026.htm"
 AFP_URL = "https://www.spensiones.cl/portal/institucional/594/w3-article-2810.html"
 
 MESES = {
@@ -27,7 +25,7 @@ AFP_FALLBACK = [
     {"nombre": "Uno", "comision": 0.0049}
 ]
 
-TRAMOS_UTM = [
+TRAMOS_UTM_FALLBACK = [
     {"desdeUtm": 0, "hastaUtm": 13.5, "factor": 0.0, "rebajaUtm": 0.0},
     {"desdeUtm": 13.5, "hastaUtm": 30, "factor": 0.04, "rebajaUtm": 0.54},
     {"desdeUtm": 30, "hastaUtm": 50, "factor": 0.08, "rebajaUtm": 1.74},
@@ -39,6 +37,14 @@ TRAMOS_UTM = [
 ]
 
 
+def sii_utm_url(anio):
+    return f"https://www.sii.cl/valores_y_fechas/utm/utm{anio}.htm"
+
+
+def sii_impuesto_url(anio):
+    return f"https://www.sii.cl/valores_y_fechas/impuesto_2da_categoria/impuesto{anio}.htm"
+
+
 def cargar_json_actual():
     try:
         with open("tasas.json", "r", encoding="utf-8") as f:
@@ -47,22 +53,50 @@ def cargar_json_actual():
         return {}
 
 
-def limpiar_numero(texto):
-    limpio = re.sub(r"[^\d]", "", texto)
+def normalizar(texto):
+    return re.sub(r"\s+", " ", texto or "").strip()
+
+
+def limpiar_entero_chileno(texto):
+    limpio = re.sub(r"[^\d]", "", texto or "")
     return int(limpio) if limpio else None
+
+
+def limpiar_monto_chileno(texto):
+    texto = texto or ""
+    texto = texto.replace("$", "").replace(" ", "").replace(".", "").replace(",", ".")
+    texto = re.sub(r"[^0-9.\-]", "", texto)
+    if texto in ("", "-", "--"):
+        return None
+    return float(texto)
+
+
+def limpiar_factor(texto):
+    texto = texto or ""
+    texto = texto.replace(",", ".")
+    match = re.search(r"\d+(?:\.\d+)?", texto)
+    return float(match.group(0)) if match else 0.0
 
 
 def porcentaje_a_decimal(texto):
     texto = texto.replace("%", "").replace(",", ".").strip()
-    valor = float(texto)
-    return round(valor / 100, 6)
+    return round(float(texto) / 100, 6)
 
 
-def obtener_utm_actual():
-    hoy = date.today()
-    mes_nombre = MESES[hoy.month]
+def get_html(url, timeout=30):
+    headers = {
+        "User-Agent": "Mozilla/5.0 (compatible; SueldoRealChileBot/1.0)"
+    }
+    r = requests.get(url, timeout=timeout, headers=headers)
+    r.raise_for_status()
+    return r.text
 
-    html = requests.get(SII_UTM_URL, timeout=20).text
+
+def obtener_utm_actual(anio, mes):
+    url = sii_utm_url(anio)
+    mes_nombre = MESES[mes]
+
+    html = get_html(url, timeout=30)
     soup = BeautifulSoup(html, "html.parser")
     texto = soup.get_text(" ", strip=True)
 
@@ -70,9 +104,101 @@ def obtener_utm_actual():
     match = re.search(patron, texto, re.IGNORECASE)
 
     if not match:
-        raise RuntimeError(f"No se pudo encontrar UTM para {mes_nombre}")
+        raise RuntimeError(f"No se pudo encontrar UTM para {mes_nombre} {anio}")
 
-    return limpiar_numero(match.group(1))
+    return limpiar_entero_chileno(match.group(1))
+
+
+def buscar_tabla_impuesto_mes(soup, mes_nombre, anio):
+    titulo_buscado = f"{mes_nombre} {anio}".lower()
+
+    for tag in soup.find_all(["h1", "h2", "h3", "h4"]):
+        texto = normalizar(tag.get_text()).lower()
+        if titulo_buscado in texto:
+            tabla = tag.find_next("table")
+            if tabla:
+                return tabla
+
+    texto_completo = soup.get_text(" ", strip=True).lower()
+    if titulo_buscado not in texto_completo:
+        raise RuntimeError(f"No se encontró el título {mes_nombre} {anio}")
+
+    tabla = soup.find("table")
+    if not tabla:
+        raise RuntimeError("No se encontró tabla de impuesto")
+
+    return tabla
+
+
+def obtener_tramos_impuesto_actual(anio, mes, utm):
+    url = sii_impuesto_url(anio)
+    mes_nombre = MESES[mes]
+
+    html = get_html(url, timeout=30)
+    soup = BeautifulSoup(html, "html.parser")
+    tabla = buscar_tabla_impuesto_mes(soup, mes_nombre, anio)
+
+    filas = tabla.find_all("tr")
+    tramos = []
+    dentro_mensual = False
+
+    for fila in filas:
+        celdas = [normalizar(c.get_text(" ", strip=True)) for c in fila.find_all(["td", "th"])]
+
+        if not celdas:
+            continue
+
+        fila_txt = " ".join(celdas).upper()
+
+        if "MENSUAL" in fila_txt:
+            dentro_mensual = True
+
+        if dentro_mensual and "QUINCENAL" in fila_txt:
+            break
+
+        if not dentro_mensual:
+            continue
+
+        valores_monto = [c for c in celdas if "$" in c or "MÁS" in c.upper() or "--" in c]
+        factores = [c for c in celdas if re.fullmatch(r"\d+(?:,\d+)?", c)]
+
+        if len(valores_monto) < 2:
+            continue
+
+        factor = 0.0
+        for c in celdas:
+            if re.fullmatch(r"\d+(?:,\d+)?", c):
+                factor = limpiar_factor(c)
+                break
+
+        desde_texto = valores_monto[0]
+        hasta_texto = valores_monto[1]
+
+        desde_pesos = limpiar_monto_chileno(desde_texto) or 0.0
+        hasta_pesos = None if "MÁS" in hasta_texto.upper() else limpiar_monto_chileno(hasta_texto)
+
+        rebaja_pesos = 0.0
+        for c in celdas:
+            if "$" in c and c not in (desde_texto, hasta_texto):
+                posible = limpiar_monto_chileno(c)
+                if posible is not None:
+                    rebaja_pesos = posible
+                    break
+
+        tramos.append({
+            "desdeUtm": round(desde_pesos / utm, 6),
+            "hastaUtm": None if hasta_pesos is None else round(hasta_pesos / utm, 6),
+            "factor": factor,
+            "rebajaUtm": round(rebaja_pesos / utm, 6)
+        })
+
+    if len(tramos) < 8:
+        raise RuntimeError(f"No se pudieron extraer correctamente los tramos mensuales. Tramos encontrados: {len(tramos)}")
+
+    tramos[0]["desdeUtm"] = 0
+    tramos[-1]["hastaUtm"] = None
+
+    return tramos[:8]
 
 
 def obtener_afp_actuales(afp_respaldo):
@@ -81,13 +207,14 @@ def obtener_afp_actuales(afp_respaldo):
 
         for intento in range(3):
             try:
-                html = requests.get(AFP_URL, timeout=60).text
+                html = get_html(AFP_URL, timeout=60)
                 break
             except Exception as e:
                 print(f"Intento AFP {intento + 1} falló: {e}")
-        
+
         if html is None:
             raise RuntimeError("No se pudo conectar con la fuente AFP después de 3 intentos")
+
         soup = BeautifulSoup(html, "html.parser")
         texto = soup.get_text(" ", strip=True)
 
@@ -105,26 +232,57 @@ def obtener_afp_actuales(afp_respaldo):
                 "comision": porcentaje_a_decimal(match.group(1))
             })
 
-        return resultado
+        return resultado, "online"
 
     except Exception as e:
         print(f"No se pudieron actualizar AFP automáticamente: {e}")
         print("Se usarán AFP guardadas o fallback.")
-        return afp_respaldo or AFP_FALLBACK
+        return afp_respaldo or AFP_FALLBACK, "respaldo"
 
 
 def crear_json():
     hoy = date.today()
-    actual = cargar_json_actual()
+    anio = hoy.year
+    mes = hoy.month
 
+    actual = cargar_json_actual()
     afp_respaldo = actual.get("afp", AFP_FALLBACK)
 
-    utm = obtener_utm_actual()
-    afp = obtener_afp_actuales(afp_respaldo)
+    estado_utm = "online"
+    estado_impuesto = "online"
+
+    try:
+        utm = obtener_utm_actual(anio, mes)
+        utm_url = sii_utm_url(anio)
+    except Exception as e:
+        print(f"No se pudo actualizar UTM del año actual: {e}")
+        utm = actual.get("utm")
+        utm_url = sii_utm_url(anio)
+
+        if not utm:
+            raise RuntimeError("No hay UTM disponible ni respaldo local")
+
+        estado_utm = "respaldo"
+
+    try:
+        tramos = obtener_tramos_impuesto_actual(anio, mes, utm)
+        impuesto_url = sii_impuesto_url(anio)
+    except Exception as e:
+        print(f"No se pudo actualizar tabla de impuesto desde SII: {e}")
+        tramos = actual.get("impuestoUnico", {}).get("tramos", TRAMOS_UTM_FALLBACK)
+        impuesto_url = sii_impuesto_url(anio)
+        estado_impuesto = "respaldo"
+
+    afp, estado_afp = obtener_afp_actuales(afp_respaldo)
 
     data = {
         "version": hoy.strftime("%Y-%m-%d"),
         "fechaActualizacion": hoy.isoformat(),
+        "periodo": {
+            "anio": anio,
+            "mes": mes,
+            "mesNombre": MESES[mes]
+        },
         "utm": utm,
         "afp": afp,
         "salud": {
@@ -134,11 +292,16 @@ def crear_json():
             "trabajadorIndefinido": 0.006
         },
         "impuestoUnico": {
-            "tramos": TRAMOS_UTM
+            "tramos": tramos
+        },
+        "estadoActualizacion": {
+            "utm": estado_utm,
+            "impuestoUnico": estado_impuesto,
+            "afp": estado_afp
         },
         "fuentes": {
-            "utm": SII_UTM_URL,
-            "impuestoUnico": SII_IMPUESTO_URL,
+            "utm": utm_url,
+            "impuestoUnico": impuesto_url,
             "afp": AFP_URL
         }
     }
@@ -147,8 +310,11 @@ def crear_json():
         json.dump(data, f, ensure_ascii=False, indent=2)
 
     print("tasas.json actualizado correctamente")
-    print(f"UTM: {utm}")
-    print(f"AFP: {afp}")
+    print(f"Periodo: {MESES[mes]} {anio}")
+    print(f"UTM: {utm} ({estado_utm})")
+    print(f"Impuesto único: {estado_impuesto}")
+    print(f"AFP: {estado_afp}")
+    print(f"AFP data: {afp}")
 
 
 if __name__ == "__main__":
