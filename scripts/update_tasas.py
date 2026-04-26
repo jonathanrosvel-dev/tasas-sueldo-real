@@ -48,35 +48,41 @@ def sii_uf_url(anio):
 
 def limpiar_decimal_chileno(texto):
     texto = texto or ""
-    texto = texto.replace("$", "").replace(" ", "").replace(".", "").replace(",", ".")
+    texto = texto.replace("$", "").replace(" ", "")
+    texto = texto.replace(".", "").replace(",", ".")
     texto = re.sub(r"[^0-9.\-]", "", texto)
+
     if texto in ("", "-", "--"):
         return None
+
     return float(texto)
 
 
 def obtener_uf_actual(anio, mes, dia):
     url = sii_uf_url(anio)
-    mes_nombre = MESES[mes]
-
     html = get_html(url, timeout=30)
     soup = BeautifulSoup(html, "html.parser")
 
+    # Busca todas las filas de tablas
     for fila in soup.find_all("tr"):
-        celdas = [normalizar(c.get_text(" ", strip=True)) for c in fila.find_all(["td", "th"])]
+        celdas = [c.get_text(" ", strip=True) for c in fila.find_all(["td", "th"])]
 
         if not celdas:
             continue
 
-        if mes_nombre.lower() in celdas[0].lower():
-            valores = [limpiar_decimal_chileno(c) for c in celdas[1:]]
-            valores = [v for v in valores if v is not None]
+        # El SII suele ordenar así:
+        # día, valor, día, valor, día, valor
+        for i in range(0, len(celdas) - 1, 2):
+            dia_texto = normalizar(celdas[i]).strip()
 
-            if len(valores) >= dia:
-                return valores[dia - 1]
+            if dia_texto == str(dia):
+                valor_texto = celdas[i + 1]
+                valor = limpiar_decimal_chileno(valor_texto)
+
+                if valor is not None:
+                    return valor
 
     raise RuntimeError(f"No se pudo encontrar UF para {dia}-{mes}-{anio}")
-
 def sii_utm_url(anio):
     return f"https://www.sii.cl/valores_y_fechas/utm/utm{anio}.htm"
 
