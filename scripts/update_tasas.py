@@ -1,6 +1,7 @@
 import json
 import re
-from datetime import date
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import requests
 from bs4 import BeautifulSoup
@@ -310,7 +311,7 @@ def obtener_afp_actuales(afp_respaldo):
 
 
 def crear_json():
-    hoy = date.today()
+    hoy = datetime.now(ZoneInfo("America/Santiago")).date()
     anio = hoy.year
     mes = hoy.month
 
