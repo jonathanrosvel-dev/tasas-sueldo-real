@@ -7,7 +7,7 @@
     "mesNombre": "Abril"
   },
   "utm": 69889,
-  "uf": 39123.45,
+  "uf": 40067.0,
   "topes": {
     "afpSaludUf": 90,
     "cesantiaUf": 135.2
@@ -102,7 +102,7 @@
   },
   "estadoActualizacion": {
     "utm": "online",
-    "uf": "respaldo",
+    "uf": "online",
     "impuestoUnico": "online",
     "afp": "online"
   },
