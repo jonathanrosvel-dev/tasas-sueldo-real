@@ -126,6 +126,29 @@ def obtener_uf_blindada(anio, mes, dia, actual):
         return float(uf_respaldo), "respaldo", "respaldo_local"
 
     raise RuntimeError("No hay UF válida disponible ni online ni en respaldo local")
+
+UTM_MIN = 50000
+UTM_MAX = 100000
+
+def validar_utm(utm):
+    return utm is not None and UTM_MIN <= utm <= UTM_MAX
+
+
+def obtener_utm_blindada(anio, mes, actual):
+    try:
+        utm = obtener_utm_actual(anio, mes)
+        if validar_utm(utm):
+            return utm, "online", sii_utm_url(anio)
+    except Exception as e:
+        print(f"UTM SII falló: {e}")
+
+    utm_respaldo = actual.get("utm")
+
+    if validar_utm(utm_respaldo):
+        return utm_respaldo, "respaldo", "respaldo_local"
+
+    raise RuntimeError("No hay UTM válida disponible")
+    
 def sii_utm_url(anio):
     return f"https://www.sii.cl/valores_y_fechas/utm/utm{anio}.htm"
 
@@ -375,18 +398,7 @@ def crear_json():
     
     topes = actual.get("topes", TOPES_FALLBACK)
 
-    try:
-        utm = obtener_utm_actual(anio, mes)
-        utm_url = sii_utm_url(anio)
-    except Exception as e:
-        print(f"No se pudo actualizar UTM del año actual: {e}")
-        utm = actual.get("utm")
-        utm_url = sii_utm_url(anio)
-
-        if not utm:
-            raise RuntimeError("No hay UTM disponible ni respaldo local")
-
-        estado_utm = "respaldo"
+    utm, estado_utm, utm_url = obtener_utm_blindada(anio, mes, actual)
 
     try:
         tramos = obtener_tramos_impuesto_actual(anio, mes, utm)
