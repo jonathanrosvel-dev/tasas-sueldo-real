@@ -36,6 +36,45 @@ TRAMOS_UTM_FALLBACK = [
     {"desdeUtm": 310, "hastaUtm": None, "factor": 0.40, "rebajaUtm": 38.82}
 ]
 
+TOPES_FALLBACK = {
+    "afpSaludUf": 90,
+    "cesantiaUf": 135.2
+}
+
+def sii_uf_url(anio):
+    return f"https://www.sii.cl/valores_y_fechas/uf/uf{anio}.htm"
+
+
+def limpiar_decimal_chileno(texto):
+    texto = texto or ""
+    texto = texto.replace("$", "").replace(" ", "").replace(".", "").replace(",", ".")
+    texto = re.sub(r"[^0-9.\-]", "", texto)
+    if texto in ("", "-", "--"):
+        return None
+    return float(texto)
+
+
+def obtener_uf_actual(anio, mes, dia):
+    url = sii_uf_url(anio)
+    mes_nombre = MESES[mes]
+
+    html = get_html(url, timeout=30)
+    soup = BeautifulSoup(html, "html.parser")
+
+    for fila in soup.find_all("tr"):
+        celdas = [normalizar(c.get_text(" ", strip=True)) for c in fila.find_all(["td", "th"])]
+
+        if not celdas:
+            continue
+
+        if mes_nombre.lower() in celdas[0].lower():
+            valores = [limpiar_decimal_chileno(c) for c in celdas[1:]]
+            valores = [v for v in valores if v is not None]
+
+            if len(valores) >= dia:
+                return valores[dia - 1]
+
+    raise RuntimeError(f"No se pudo encontrar UF para {dia}-{mes}-{anio}")
 
 def sii_utm_url(anio):
     return f"https://www.sii.cl/valores_y_fechas/utm/utm{anio}.htm"
@@ -280,6 +319,22 @@ def crear_json():
 
     estado_utm = "online"
     estado_impuesto = "online"
+    estado_uf = "online"
+
+    try:
+        uf = obtener_uf_actual(anio, mes, hoy.day)
+        uf_url = sii_uf_url(anio)
+    except Exception as e:
+        print(f"No se pudo actualizar UF desde SII: {e}")
+        uf = actual.get("uf")
+        uf_url = sii_uf_url(anio)
+    
+        if not uf:
+            raise RuntimeError("No hay UF disponible ni respaldo local")
+    
+        estado_uf = "respaldo"
+    
+    topes = actual.get("topes", TOPES_FALLBACK)
 
     try:
         utm = obtener_utm_actual(anio, mes)
@@ -314,6 +369,8 @@ def crear_json():
             "mesNombre": MESES[mes]
         },
         "utm": utm,
+        "uf": uf,
+        "topes": topes,
         "afp": afp,
         "salud": {
             "fonasa": 0.07
@@ -326,11 +383,13 @@ def crear_json():
         },
         "estadoActualizacion": {
             "utm": estado_utm,
+            "uf": estado_uf,
             "impuestoUnico": estado_impuesto,
             "afp": estado_afp
         },
         "fuentes": {
             "utm": utm_url,
+            "uf": uf_url,
             "impuestoUnico": impuesto_url,
             "afp": AFP_URL
         }
@@ -342,9 +401,12 @@ def crear_json():
     print("tasas.json actualizado correctamente")
     print(f"Periodo: {MESES[mes]} {anio}")
     print(f"UTM: {utm} ({estado_utm})")
+    print(f"UF: {uf} ({estado_uf})")
+    print(f"Topes: {topes}")
     print(f"Impuesto único: {estado_impuesto}")
     print(f"AFP: {estado_afp}")
     print(f"AFP data: {afp}")
+    
 
 
 if __name__ == "__main__":
