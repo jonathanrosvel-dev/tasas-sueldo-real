@@ -42,6 +42,9 @@ TOPES_FALLBACK = {
     "cesantiaUf": 135.2
 }
 
+UF_MIN = 30000
+UF_MAX = 60000
+
 def sii_uf_url(anio):
     return f"https://www.sii.cl/valores_y_fechas/uf/uf{anio}.htm"
 
@@ -58,31 +61,71 @@ def limpiar_decimal_chileno(texto):
     return float(texto)
 
 
-def obtener_uf_actual(anio, mes, dia):
+def validar_uf(uf):
+    if uf is None:
+        return False
+
+    return UF_MIN <= float(uf) <= UF_MAX
+
+
+def obtener_uf_sii(anio, mes, dia):
     url = sii_uf_url(anio)
     html = get_html(url, timeout=30)
     soup = BeautifulSoup(html, "html.parser")
 
-    # Busca todas las filas de tablas
     for fila in soup.find_all("tr"):
         celdas = [c.get_text(" ", strip=True) for c in fila.find_all(["td", "th"])]
 
         if not celdas:
             continue
 
-        # El SII suele ordenar así:
-        # día, valor, día, valor, día, valor
         for i in range(0, len(celdas) - 1, 2):
             dia_texto = normalizar(celdas[i]).strip()
 
             if dia_texto == str(dia):
-                valor_texto = celdas[i + 1]
-                valor = limpiar_decimal_chileno(valor_texto)
+                valor = limpiar_decimal_chileno(celdas[i + 1])
 
-                if valor is not None:
+                if validar_uf(valor):
                     return valor
 
-    raise RuntimeError(f"No se pudo encontrar UF para {dia}-{mes}-{anio}")
+    raise RuntimeError(f"No se pudo encontrar UF válida en SII para {dia}-{mes}-{anio}")
+
+
+def obtener_uf_mindicador():
+    url = "https://mindicador.cl/api/uf"
+    response = requests.get(url, timeout=30)
+    response.raise_for_status()
+
+    data = response.json()
+    valor = data["serie"][0]["valor"]
+
+    if validar_uf(valor):
+        return float(valor)
+
+    raise RuntimeError(f"UF inválida desde mindicador.cl: {valor}")
+
+
+def obtener_uf_blindada(anio, mes, dia, actual):
+    try:
+        uf = obtener_uf_sii(anio, mes, dia)
+        return uf, "online_sii", sii_uf_url(anio)
+
+    except Exception as e:
+        print(f"No se pudo actualizar UF desde SII: {e}")
+
+    try:
+        uf = obtener_uf_mindicador()
+        return uf, "online_mindicador", "https://mindicador.cl/api/uf"
+
+    except Exception as e:
+        print(f"No se pudo actualizar UF desde mindicador.cl: {e}")
+
+    uf_respaldo = actual.get("uf")
+
+    if validar_uf(uf_respaldo):
+        return float(uf_respaldo), "respaldo", "respaldo_local"
+
+    raise RuntimeError("No hay UF válida disponible ni online ni en respaldo local")
 def sii_utm_url(anio):
     return f"https://www.sii.cl/valores_y_fechas/utm/utm{anio}.htm"
 
@@ -328,18 +371,7 @@ def crear_json():
     estado_impuesto = "online"
     estado_uf = "online"
 
-    try:
-        uf = obtener_uf_actual(anio, mes, hoy.day)
-        uf_url = sii_uf_url(anio)
-    except Exception as e:
-        print(f"No se pudo actualizar UF desde SII: {e}")
-        uf = actual.get("uf")
-        uf_url = sii_uf_url(anio)
-    
-        if not uf:
-            raise RuntimeError("No hay UF disponible ni respaldo local")
-    
-        estado_uf = "respaldo"
+    uf, estado_uf, uf_url = obtener_uf_blindada(anio, mes, hoy.day, actual)
     
     topes = actual.get("topes", TOPES_FALLBACK)
 
