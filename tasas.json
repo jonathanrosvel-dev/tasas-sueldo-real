@@ -15,7 +15,7 @@
   "afp": [
     {
       "nombre": "Capital",
-      "comision": 0.0046
+      "comision": 0.0144
     },
     {
       "nombre": "Cuprum",
@@ -104,7 +104,7 @@
     "utm": "online",
     "uf": "online_sii",
     "impuestoUnico": "online",
-    "afp": "respaldo"
+    "afp": "online"
   },
   "fuentes": {
     "utm": "https://www.sii.cl/valores_y_fechas/utm/utm2026.htm",
