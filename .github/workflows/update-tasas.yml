@@ -26,6 +26,9 @@ jobs:
         run: pip install requests beautifulsoup4
 
       - name: Ejecutar script
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python scripts/update_tasas.py
 
       - name: Verificar cambios
