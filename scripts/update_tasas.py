@@ -433,7 +433,10 @@ def enviar_alerta_telegram(mensaje):
             },
             timeout=20
         )
+
+        print("Telegram response:", response.status_code, response.text)
         response.raise_for_status()
+
         print("Alerta enviada por Telegram.")
     except Exception as e:
         print(f"No se pudo enviar alerta por Telegram: {e}")
