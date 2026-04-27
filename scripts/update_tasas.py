@@ -14,7 +14,7 @@ MESES = {
     9: "Septiembre", 10: "Octubre", 11: "Noviembre", 12: "Diciembre"
 }
 
-AFP_NOMBRES = ["Capital", "Cuprum", "Habitat", "Modelo", "PlanVital", "Provida", "Uno"]
+AFP_NOMBRES = ["Capital", "Cuprum", "Habitat", "Modelo", "Planvital", "Provida", "Uno"]
 
 AFP_FALLBACK = [
     {"nombre": "Capital", "comision": 0.0144},
@@ -355,7 +355,7 @@ def obtener_afp_actuales(afp_respaldo):
                 print(f"Intento AFP {intento + 1} falló: {e}")
 
         if html is None:
-            raise RuntimeError("No se pudo conectar con la fuente AFP después de 3 intentos")
+            raise RuntimeError("No se pudo conectar con la fuente AFP")
 
         soup = BeautifulSoup(html, "html.parser")
         texto = soup.get_text(" ", strip=True)
@@ -363,7 +363,8 @@ def obtener_afp_actuales(afp_respaldo):
         resultado = []
 
         for nombre in AFP_NOMBRES:
-            patron = rf"{nombre}.*?(\d{{1,2}}[,.]\d{{1,3}})\s*%"
+            # 🔥 regex más robusto
+            patron = rf"AFP\s+{nombre}[:\s]+(\d{{1,2}}[,.]\d{{1,3}})\s*%"
             match = re.search(patron, texto, re.IGNORECASE)
 
             if not match:
