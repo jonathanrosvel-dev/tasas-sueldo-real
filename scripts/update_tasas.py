@@ -14,7 +14,7 @@ MESES = {
     9: "Septiembre", 10: "Octubre", 11: "Noviembre", 12: "Diciembre"
 }
 
-AFP_NOMBRES = ["Capital", "Cuprum", "Habitat", "Modelo", "Planvital", "Provida", "Uno"]
+AFP_NOMBRES = ["Capital", "Cuprum", "Habitat", "Modelo", "PlanVital", "Provida", "Uno"]
 
 AFP_FALLBACK = [
     {"nombre": "Capital", "comision": 0.0144},
@@ -355,25 +355,57 @@ def obtener_afp_actuales(afp_respaldo):
                 print(f"Intento AFP {intento + 1} falló: {e}")
 
         if html is None:
-            raise RuntimeError("No se pudo conectar con la fuente AFP")
+            raise RuntimeError("No se pudo conectar con la fuente AFP después de 3 intentos")
 
         soup = BeautifulSoup(html, "html.parser")
-        texto = soup.get_text(" ", strip=True)
+        texto = normalizar(soup.get_text(" ", strip=True))
+
+        aliases = {
+            "Capital": ["Capital"],
+            "Cuprum": ["Cuprum"],
+            "Habitat": ["Habitat", "Hábitat"],
+            "Modelo": ["Modelo"],
+            "PlanVital": ["PlanVital", "Planvital", "Plan Vital"],
+            "Provida": ["Provida", "ProVida", "Pro Vida"],
+            "Uno": ["Uno", "UNO"]
+        }
 
         resultado = []
 
-        for nombre in AFP_NOMBRES:
-            # 🔥 regex más robusto
-            patron = rf"AFP\s+{nombre}[:\s]+(\d{{1,2}}[,.]\d{{1,3}})\s*%"
-            match = re.search(patron, texto, re.IGNORECASE)
+        for nombre_final, nombres_posibles in aliases.items():
+            encontrado = None
 
-            if not match:
-                raise RuntimeError(f"No se encontró comisión AFP {nombre}")
+            for nombre_web in nombres_posibles:
+                patrones = [
+                    rf"AFP\s+{re.escape(nombre_web)}\s*[:\-]?\s*(\d{{1,2}}[,.]\d{{1,3}})\s*%",
+                    rf"{re.escape(nombre_web)}\s*[:\-]?\s*(\d{{1,2}}[,.]\d{{1,3}})\s*%",
+                    rf"{re.escape(nombre_web)}.*?(\d{{1,2}}[,.]\d{{1,3}})\s*%"
+                ]
+
+                for patron in patrones:
+                    match = re.search(patron, texto, re.IGNORECASE)
+
+                    if match:
+                        encontrado = porcentaje_a_decimal(match.group(1))
+                        break
+
+                if encontrado is not None:
+                    break
+
+            if encontrado is None:
+                raise RuntimeError(f"No se encontró comisión AFP {nombre_final}")
+
+            # Validación lógica: comisión AFP normal entre 0% y 3%
+            if encontrado < 0 or encontrado > 0.03:
+                raise RuntimeError(f"Comisión AFP fuera de rango para {nombre_final}: {encontrado}")
 
             resultado.append({
-                "nombre": nombre,
-                "comision": porcentaje_a_decimal(match.group(1))
+                "nombre": nombre_final,
+                "comision": encontrado
             })
+
+        if len(resultado) != 7:
+            raise RuntimeError(f"Se esperaban 7 AFP, se encontraron {len(resultado)}")
 
         return resultado, "online"
 
