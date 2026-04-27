@@ -1,5 +1,6 @@
 import json
 import re
+import os
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -414,7 +415,29 @@ def obtener_afp_actuales(afp_respaldo):
         print("Se usarán AFP guardadas o fallback.")
         return afp_respaldo or AFP_FALLBACK, "respaldo"
 
+def enviar_alerta_telegram(mensaje):
+    token = os.getenv("TELEGRAM_BOT_TOKEN")
+    chat_id = os.getenv("TELEGRAM_CHAT_ID")
 
+    if not token or not chat_id:
+        print("Telegram no configurado. No se envió alerta.")
+        return
+
+    try:
+        url = f"https://api.telegram.org/bot{token}/sendMessage"
+        response = requests.post(
+            url,
+            data={
+                "chat_id": chat_id,
+                "text": mensaje
+            },
+            timeout=20
+        )
+        response.raise_for_status()
+        print("Alerta enviada por Telegram.")
+    except Exception as e:
+        print(f"No se pudo enviar alerta por Telegram: {e}")
+        
 def crear_json():
     hoy = datetime.now(ZoneInfo("America/Santiago")).date()
     anio = hoy.year
@@ -490,6 +513,38 @@ def crear_json():
     print(f"Impuesto único: {estado_impuesto}")
     print(f"AFP: {estado_afp}")
     print(f"AFP data: {afp}")
+
+    respaldos = []
+
+    if estado_uf == "respaldo":
+        respaldos.append("UF")
+    if estado_utm == "respaldo":
+        respaldos.append("UTM")
+    if estado_impuesto == "respaldo":
+        respaldos.append("Impuesto único")
+    if estado_afp == "respaldo":
+        respaldos.append("AFP")
+
+    if respaldos:
+        mensaje = (
+            "⚠️ Sueldo Real Chile\n"
+            "Se usó respaldo en:\n"
+            + "\n".join(f"• {x}" for x in respaldos)
+            + f"\n\nFecha: {hoy.isoformat()}"
+        )
+    else:
+        mensaje = (
+            "✅ Sueldo Real Chile\n"
+            "Actualización completada correctamente.\n"
+            "Todas las fuentes se actualizaron online.\n\n"
+            f"Fecha: {hoy.isoformat()}\n"
+            f"UF: {uf} ({estado_uf})\n"
+            f"UTM: {utm} ({estado_utm})\n"
+            f"Impuesto único: {estado_impuesto}\n"
+            f"AFP: {estado_afp}"
+        )
+
+    enviar_alerta_telegram(mensaje)
     
 
 
