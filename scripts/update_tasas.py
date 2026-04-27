@@ -520,21 +520,51 @@ def crear_json():
     respaldos = []
 
     if estado_uf == "respaldo":
-        respaldos.append("UF")
+        respaldos.append({
+            "nombre": "UF",
+            "valor": uf,
+            "fuente": sii_uf_url(anio)
+        })
+    
     if estado_utm == "respaldo":
-        respaldos.append("UTM")
+        respaldos.append({
+            "nombre": "UTM",
+            "valor": utm,
+            "fuente": sii_utm_url(anio)
+        })
+    
     if estado_impuesto == "respaldo":
-        respaldos.append("Impuesto único")
+        respaldos.append({
+            "nombre": "Impuesto único",
+            "valor": "Tabla de tramos guardada en tasas.json",
+            "fuente": sii_impuesto_url(anio)
+        })
+    
     if estado_afp == "respaldo":
-        respaldos.append("AFP")
-
+        respaldos.append({
+            "nombre": "AFP",
+            "valor": afp,
+            "fuente": AFP_URL
+        })
+    
     if respaldos:
         mensaje = (
             "⚠️ Sueldo Real Chile\n"
-            "Se usó respaldo en:\n"
-            + "\n".join(f"• {x}" for x in respaldos)
-            + f"\n\nFecha: {hoy.isoformat()}"
+            "Se usó respaldo en:\n\n"
         )
+    
+        for item in respaldos:
+            mensaje += (
+                f"• {item['nombre']}\n"
+                f"  Valor usado: {item['valor']}\n"
+                f"  Revisar fuente: {item['fuente']}\n\n"
+            )
+    
+        mensaje += (
+            f"Fecha: {hoy.isoformat()}\n"
+            "Revisar si la fuente cambió o si corresponde actualizar manualmente."
+        )
+    
     else:
         mensaje = (
             "✅ Sueldo Real Chile\n"
@@ -546,7 +576,7 @@ def crear_json():
             f"Impuesto único: {estado_impuesto}\n"
             f"AFP: {estado_afp}"
         )
-
+    
     enviar_alerta_telegram(mensaje)
     
 
