@@ -1,13 +1,13 @@
 {
-  "version": "2026-04-28",
-  "fechaActualizacion": "2026-04-28",
+  "version": "2026-04-29",
+  "fechaActualizacion": "2026-04-29",
   "periodo": {
     "anio": 2026,
     "mes": 4,
     "mesNombre": "Abril"
   },
   "utm": 69889,
-  "uf": 40093.59,
+  "uf": 40106.89,
   "topes": {
     "afpSaludUf": 90,
     "cesantiaUf": 135.2
@@ -104,7 +104,7 @@
     "utm": "online",
     "uf": "online_sii",
     "impuestoUnico": "online",
-    "afp": "respaldo"
+    "afp": "online"
   },
   "fuentes": {
     "utm": "https://www.sii.cl/valores_y_fechas/utm/utm2026.htm",
