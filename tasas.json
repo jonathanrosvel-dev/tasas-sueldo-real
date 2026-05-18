@@ -1,13 +1,13 @@
 {
-  "version": "2026-05-17",
-  "fechaActualizacion": "2026-05-17",
+  "version": "2026-05-18",
+  "fechaActualizacion": "2026-05-18",
   "periodo": {
     "anio": 2026,
     "mes": 5,
     "mesNombre": "Mayo"
   },
   "utm": 70588,
-  "uf": 40374.49,
+  "uf": 40391.32,
   "topes": {
     "afpSaludUf": 90,
     "cesantiaUf": 135.2
