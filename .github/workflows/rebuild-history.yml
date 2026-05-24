@@ -41,14 +41,14 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          CMD="python scripts/update_tasas.py rebuild-history --from '${{ inputs.from_period }}'"
+          CMD=(python scripts/update_tasas.py rebuild-history --from "${{ inputs.from_period }}")
           if [ -n "${{ inputs.to_period }}" ]; then
-            CMD="$CMD --to '${{ inputs.to_period }}'"
+            CMD+=(--to "${{ inputs.to_period }}")
           fi
           if [ "${{ inputs.force }}" = "true" ]; then
-            CMD="$CMD --force"
+            CMD+=(--force)
           fi
-          eval "$CMD"
+          "${CMD[@]}"
 
       - name: Validar historicos
         run: python scripts/update_tasas.py validate-history
