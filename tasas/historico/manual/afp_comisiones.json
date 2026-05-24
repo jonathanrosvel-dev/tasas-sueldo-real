@@ -1,0 +1,19 @@
+{
+  "afp": [
+    {
+      "desde": "2026-01",
+      "hasta": null,
+      "fuente": "manual_respaldo",
+      "nota": "Respaldo manual usado solo si no hay fuente historica automatica confiable.",
+      "comisiones": [
+        { "nombre": "Capital", "comision": 0.0144 },
+        { "nombre": "Cuprum", "comision": 0.0144 },
+        { "nombre": "Habitat", "comision": 0.0127 },
+        { "nombre": "Modelo", "comision": 0.0058 },
+        { "nombre": "PlanVital", "comision": 0.0116 },
+        { "nombre": "Provida", "comision": 0.0145 },
+        { "nombre": "Uno", "comision": 0.0046 }
+      ]
+    }
+  ]
+}
