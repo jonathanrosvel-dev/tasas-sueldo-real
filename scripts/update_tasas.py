@@ -3,7 +3,7 @@ import calendar
 import json
 import os
 import re
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -56,6 +56,21 @@ UF_MIN = 30000
 UF_MAX = 60000
 UTM_MIN = 50000
 UTM_MAX = 100000
+
+OK_STATES = {"online", "online_sii", "online_mindicador", "ok", "validado"}
+INCOMPLETE_STATES = {"manual", "respaldo"}
+REQUIRED_STATES = {"manual_requerido", "faltante", "error", "invalido"}
+ESSENTIAL_STATUS_KEYS = (
+    "uf",
+    "utm",
+    "impuestoUnico",
+    "afp",
+    "topes",
+    "imm",
+    "salud",
+    "cesantia",
+)
+ALERT_MANUAL_KEYS = {"afp", "topes"}
 
 DEFAULT_MANUAL_FILES = {
     "laboral.json": {
@@ -500,6 +515,19 @@ def obtener_afp_actuales(afp_respaldo):
         return afp_respaldo or AFP_FALLBACK, "respaldo", "respaldo_local"
 
 
+def calcular_estado_periodo(current, estado_actualizacion):
+    if current:
+        return "vigente"
+    estados = [estado_actualizacion.get(k) for k in ESSENTIAL_STATUS_KEYS]
+    if any(not estado or estado in REQUIRED_STATES for estado in estados):
+        return "manual_requerido"
+    if all(estado in OK_STATES for estado in estados):
+        return "cerrado"
+    if any(estado in INCOMPLETE_STATES for estado in estados):
+        return "incompleto"
+    return "incompleto"
+
+
 def build_snapshot(anio, mes, current=False, uf_values=None):
     ensure_manual_files()
     actual = cargar_json_actual()
@@ -555,7 +583,6 @@ def build_snapshot(anio, mes, current=False, uf_values=None):
         afp, fuente_afp = manual_afp(periodo)
         estado_afp = "manual"
 
-    estado_periodo = "vigente" if current else "cerrado"
     estado_actualizacion = {
         "utm": estado_utm,
         "uf": estado_uf,
@@ -563,12 +590,10 @@ def build_snapshot(anio, mes, current=False, uf_values=None):
         "afp": estado_afp,
         "topes": "manual",
         "imm": "manual",
+        "salud": "ok",
         "cesantia": "manual"
     }
-    if any(v == "manual_requerido" for v in estado_actualizacion.values()):
-        estado_periodo = "manual_requerido"
-    elif any(v == "respaldo" for v in estado_actualizacion.values()):
-        estado_periodo = "incompleto" if not current else "vigente"
+    estado_periodo = calcular_estado_periodo(current, estado_actualizacion)
 
     return {
         "version": periodo if not current else hoy.isoformat(),
@@ -593,6 +618,7 @@ def build_snapshot(anio, mes, current=False, uf_values=None):
             "afp": fuente_afp,
             "topes": fuente_topes if fuente_topes.startswith("http") else FUENTE_TOPES_MANUAL,
             "imm": fuente_laboral if fuente_laboral.startswith("http") else FUENTE_LABORAL_MANUAL,
+            "salud": "cotizacion_legal_7_por_ciento",
             "cesantia": fuente_cesantia if fuente_cesantia.startswith("http") else FUENTE_CESANTIA_MANUAL
         }
     }
@@ -603,7 +629,7 @@ def update_index():
     for path in sorted(PERIODOS_DIR.glob("*/*.json")):
         data = read_json(path, {}) or {}
         periodo = path.stem
-        estado = data.get("estadoPeriodo") or "cerrado"
+        estado = data.get("estadoPeriodo") or "manual_requerido"
         periodos.append({
             "periodo": periodo,
             "estado": estado,
@@ -637,27 +663,46 @@ def enviar_alerta_telegram(mensaje):
         print(f"No se pudo enviar alerta por Telegram: {e}")
 
 
+def valor_usado(data, indicador):
+    if indicador == "uf":
+        return data.get("uf")
+    if indicador == "utm":
+        return data.get("utm")
+    if indicador == "impuestoUnico":
+        return "tabla de tramos" if data.get("impuestoUnico", {}).get("tramos") else "sin tramos"
+    if indicador == "afp":
+        return f"{len(data.get('afp', []))} AFP cargadas"
+    if indicador == "topes":
+        return data.get("topes")
+    if indicador == "imm":
+        return data.get("laboral")
+    if indicador == "salud":
+        return data.get("salud")
+    if indicador == "cesantia":
+        return data.get("cesantia")
+    return data.get(indicador, "sin valor")
+
+
+def alerta_requerida(indicador, estado):
+    if estado in REQUIRED_STATES or estado == "respaldo":
+        return True
+    return estado == "manual" and indicador in ALERT_MANUAL_KEYS
+
+
 def alertas_snapshot(data):
     alertas = []
     periodo = period_key(data["periodo"]["anio"], data["periodo"]["mes"])
     for indicador, estado in data.get("estadoActualizacion", {}).items():
-        if estado not in ("online", "online_sii", "online_mindicador", "manual"):
+        if alerta_requerida(indicador, estado):
             fuente = data.get("fuentes", {}).get(indicador, "sin_fuente")
-            valor = data.get(indicador)
-            if indicador == "uf":
-                valor = data.get("uf")
-            elif indicador == "impuestoUnico":
-                valor = "tabla de tramos"
-            elif indicador == "afp":
-                valor = "lista AFP"
             alertas.append(
-                "⚠️ Sueldo Real Chile - dato histórico incompleto\n"
-                f"Período: {periodo}\n"
+                "⚠️ Sueldo Real Chile - dato historico incompleto\n"
+                f"Periodo: {periodo}\n"
                 f"Indicador: {indicador}\n"
                 f"Estado: {estado}\n"
-                f"Valor usado: {valor}\n"
+                f"Valor usado: {valor_usado(data, indicador)}\n"
                 f"Fuente revisada: {fuente}\n"
-                "Acción sugerida: revisar y completar manualmente"
+                "Accion sugerida: revisar y completar manualmente"
             )
     return alertas
 
@@ -676,18 +721,19 @@ def update_current():
     else:
         enviar_alerta_telegram(
             "✅ Sueldo Real Chile\n"
-            "Actualización completada correctamente.\n"
-            "Todas las fuentes automáticas requeridas se actualizaron online.\n\n"
+            "Actualizacion completada correctamente.\n"
+            "Todas las fuentes automaticas requeridas se actualizaron online.\n\n"
             f"Fecha: {hoy.isoformat()}\n"
             f"UF: {data['uf']} ({data['estadoActualizacion']['uf']})\n"
             f"UTM: {data['utm']} ({data['estadoActualizacion']['utm']})\n"
-            f"Períodos históricos: {len(index.get('periodos', []))}"
+            f"Periodos historicos: {len(index.get('periodos', []))}"
         )
 
     print("tasas.json actualizado correctamente")
     print(f"Periodo: {MESES[hoy.month]} {hoy.year}")
     print(f"UF: {data['uf']} ({data['estadoActualizacion']['uf']})")
     print(f"UTM: {data['utm']} ({data['estadoActualizacion']['utm']})")
+    print(f"Estado periodo vigente: {data['estadoPeriodo']}")
     print(f"Historicos indexados: {len(index.get('periodos', []))}")
 
 
@@ -728,9 +774,13 @@ def rebuild_history(from_period, to_period=None, force=False):
     print(f"Periodos disponibles: {len(index.get('periodos', []))}")
 
 
-def validate_snapshot(path, data):
+def validate_snapshot(data):
     errores = []
-    required = ["version", "fechaActualizacion", "periodo", "utm", "uf", "topes", "afp", "salud", "cesantia", "impuestoUnico", "estadoActualizacion", "fuentes"]
+    required = [
+        "version", "fechaActualizacion", "periodo", "utm", "uf", "topes",
+        "laboral", "afp", "salud", "cesantia", "impuestoUnico",
+        "estadoActualizacion", "fuentes"
+    ]
     for field in required:
         if field not in data:
             errores.append(f"Falta campo {field}")
@@ -748,34 +798,63 @@ def validate_snapshot(path, data):
         errores.append("IMM debe ser mayor que 0")
     afps = data.get("afp", [])
     if not afps:
-        errores.append("AFP no puede estar vacío")
+        errores.append("AFP no puede estar vacio")
     for afp in afps:
         comision = afp.get("comision")
         if comision is None or comision < 0 or comision > 0.03:
             errores.append(f"Comision AFP fuera de rango: {afp}")
     tramos = data.get("impuestoUnico", {}).get("tramos", [])
     if not tramos:
-        errores.append("Tramos de impuesto no pueden estar vacíos")
+        errores.append("Tramos de impuesto no pueden estar vacios")
     return errores
 
 
 def validate_history():
     errores_totales = []
+    resumen = {"cerrado": [], "vigente": [], "incompleto": [], "manual_requerido": []}
+    otros = []
+
     for path in sorted(PERIODOS_DIR.glob("*/*.json")):
         data = read_json(path, {}) or {}
-        errores = validate_snapshot(path, data)
+        periodo = path.stem
+        estado = data.get("estadoPeriodo") or "manual_requerido"
+        if estado in resumen:
+            resumen[estado].append(periodo)
+        else:
+            otros.append((periodo, estado))
+
+        errores = validate_snapshot(data)
         if errores:
             errores_totales.append((path, errores))
 
+    print("Resumen de validacion historica:")
+    for estado in ("cerrado", "vigente", "incompleto", "manual_requerido"):
+        periodos = resumen[estado]
+        print(f"- {estado}: {len(periodos)} ({', '.join(periodos) if periodos else 'ninguno'})")
+    if otros:
+        print("- estados no reconocidos:")
+        for periodo, estado in otros:
+            print(f"  * {periodo}: {estado}")
+
+    incompletos = resumen["incompleto"] + resumen["manual_requerido"]
+    if incompletos:
+        print("Periodos que requieren revision antes de cerrarse:")
+        for periodo in incompletos:
+            path = period_path(*parse_period(periodo))
+            data = read_json(path, {}) or {}
+            estados = data.get("estadoActualizacion", {})
+            pendientes = [f"{k}={v}" for k, v in estados.items() if v not in OK_STATES]
+            print(f"- {periodo}: {', '.join(pendientes) if pendientes else 'sin detalle'}")
+
     if errores_totales:
-        print("Errores de validación histórica:")
+        print("Errores de validacion historica:")
         for path, errores in errores_totales:
             print(f"- {path.relative_to(ROOT)}")
             for error in errores:
                 print(f"  * {error}")
         raise SystemExit(1)
 
-    print("Históricos validados correctamente")
+    print("Historicos validados correctamente en estructura y rangos basicos")
     print(f"Archivos mensuales: {len(list(PERIODOS_DIR.glob('*/*.json')))}")
 
 
