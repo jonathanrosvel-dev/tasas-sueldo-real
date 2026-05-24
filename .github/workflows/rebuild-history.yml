@@ -1,0 +1,70 @@
+name: rebuild-history
+
+on:
+  workflow_dispatch:
+    inputs:
+      from_period:
+        description: "Periodo inicial YYYY-MM"
+        required: true
+        default: "2026-01"
+      to_period:
+        description: "Periodo final YYYY-MM opcional"
+        required: false
+        default: ""
+      force:
+        description: "Sobrescribir periodos cerrados"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar dependencias
+        run: pip install requests beautifulsoup4
+
+      - name: Reconstruir historicos
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          CMD="python scripts/update_tasas.py rebuild-history --from '${{ inputs.from_period }}'"
+          if [ -n "${{ inputs.to_period }}" ]; then
+            CMD="$CMD --to '${{ inputs.to_period }}'"
+          fi
+          if [ "${{ inputs.force }}" = "true" ]; then
+            CMD="$CMD --force"
+          fi
+          eval "$CMD"
+
+      - name: Validar historicos
+        run: python scripts/update_tasas.py validate-history
+
+      - name: Verificar cambios
+        id: verify-changed-files
+        run: |
+          if [ -n "$(git status --porcelain tasas/historico)" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit automatico
+        if: steps.verify-changed-files.outputs.changed == 'true'
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Reconstruir historicos de tasas"
+          file_pattern: tasas/historico/**
