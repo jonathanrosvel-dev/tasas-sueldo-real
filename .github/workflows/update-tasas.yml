@@ -2,8 +2,8 @@ name: update
 
 on:
   schedule:
-  - cron: "0 6 * * *"  # 3 AM Chile
-  - cron: "0 10 * * *" # backup (7 AM Chile aprox)
+    - cron: "0 6 * * *"  # 3 AM Chile
+    - cron: "0 10 * * *" # backup (7 AM Chile aprox)
   workflow_dispatch:
 
 permissions:
@@ -29,20 +29,22 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python scripts/update_tasas.py
+        run: python scripts/update_tasas.py update-current
 
       - name: Verificar cambios
         id: verify-changed-files
         run: |
-          if [ -n "$(git status --porcelain tasas.json)" ]; then
+          if [ -n "$(git status --porcelain tasas.json tasas/historico)" ]; then
             echo "changed=true" >> $GITHUB_OUTPUT
           else
             echo "changed=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Commit automático
+      - name: Commit automatico
         if: steps.verify-changed-files.outputs.changed == 'true'
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Actualizar tasas automático"
-          file_pattern: tasas.json
+          commit_message: "Actualizar tasas automatico"
+          file_pattern: |
+            tasas.json
+            tasas/historico/**
