@@ -5,22 +5,22 @@
   "periodos": [
     {
       "periodo": "2026-01",
-      "estado": "cerrado",
+      "estado": "incompleto",
       "path": "tasas/historico/periodos/2026/2026-01.json"
     },
     {
       "periodo": "2026-02",
-      "estado": "cerrado",
+      "estado": "incompleto",
       "path": "tasas/historico/periodos/2026/2026-02.json"
     },
     {
       "periodo": "2026-03",
-      "estado": "cerrado",
+      "estado": "incompleto",
       "path": "tasas/historico/periodos/2026/2026-03.json"
     },
     {
       "periodo": "2026-04",
-      "estado": "cerrado",
+      "estado": "incompleto",
       "path": "tasas/historico/periodos/2026/2026-04.json"
     },
     {
