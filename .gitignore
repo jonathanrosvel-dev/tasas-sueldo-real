@@ -1,0 +1,9 @@
+.env
+*.env
+__pycache__/
+*.pyc
+.DS_Store
+key.properties
+*.jks
+*.keystore
+local.properties
