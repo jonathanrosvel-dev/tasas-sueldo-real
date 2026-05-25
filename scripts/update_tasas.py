@@ -29,6 +29,10 @@ MESES = {
     5: "Mayo", 6: "Junio", 7: "Julio", 8: "Agosto",
     9: "Septiembre", 10: "Octubre", 11: "Noviembre", 12: "Diciembre"
 }
+MESES_CORTOS = {
+    "ene": 1, "feb": 2, "mar": 3, "abr": 4, "may": 5, "jun": 6,
+    "jul": 7, "ago": 8, "sep": 9, "oct": 10, "nov": 11, "dic": 12
+}
 MESES_INV = {v.lower(): k for k, v in MESES.items()}
 
 AFP_FALLBACK = [
@@ -71,6 +75,7 @@ ESSENTIAL_STATUS_KEYS = (
     "cesantia",
 )
 ALERT_MANUAL_KEYS = {"afp", "topes"}
+UF_VALUE_RE = r"\d{1,3}(?:\.\d{3})*,\d{2}"
 
 DEFAULT_MANUAL_FILES = {
     "laboral.json": {
@@ -213,8 +218,20 @@ def validar_utm(utm):
     return utm is not None and UTM_MIN <= float(utm) <= UTM_MAX
 
 
-def get_html(url, timeout=30):
-    headers = {"User-Agent": "Mozilla/5.0 (compatible; SueldoRealChileBot/1.0)"}
+def get_html(url, timeout=30, referer=None):
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/125.0.0.0 Safari/537.36"
+        ),
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "Accept-Language": "es-CL,es;q=0.9,en;q=0.8",
+        "Connection": "keep-alive",
+        "Upgrade-Insecure-Requests": "1",
+    }
+    if referer:
+        headers["Referer"] = referer
     r = requests.get(url, timeout=timeout, headers=headers)
     r.raise_for_status()
     return r.text
@@ -296,32 +313,89 @@ def manual_afp(periodo):
     return item.get("comisiones", AFP_FALLBACK), item.get("fuente", FUENTE_AFP_MANUAL)
 
 
-def obtener_uf_diaria_sii(anio):
-    html = get_html(sii_uf_url(anio), timeout=45)
-    soup = BeautifulSoup(html, "html.parser")
-    lines = [normalizar(line) for line in soup.get_text("\n").splitlines()]
+def agregar_uf_valor(valores, anio, mes, dia, valor_texto):
+    if dia < 1 or dia > last_day(anio, mes):
+        return
+    valor = limpiar_decimal_chileno(valor_texto)
+    if validar_uf(valor):
+        valores[date(anio, mes, dia).isoformat()] = round(float(valor), 2)
+
+
+def extraer_pares_dia_uf_desde_texto(texto, anio, mes, valores):
+    patron = rf"(?<![\d.,])(\d{{1,2}})\s+({UF_VALUE_RE})(?![\d.,])"
+    for dia_texto, valor_texto in re.findall(patron, texto):
+        agregar_uf_valor(valores, anio, mes, int(dia_texto), valor_texto)
+
+
+def parsear_uf_tablas_por_mes(soup, anio):
+    valores = {}
+    for titulo in soup.find_all(["h1", "h2", "h3", "h4"]):
+        mes_nombre = normalizar(titulo.get_text()).lower()
+        if mes_nombre not in MESES_INV:
+            continue
+        mes = MESES_INV[mes_nombre]
+        tabla = titulo.find_next("table")
+        if not tabla:
+            continue
+        for fila in tabla.find_all("tr"):
+            celdas = [normalizar(c.get_text(" ", strip=True)) for c in fila.find_all(["td", "th"])]
+            texto = " ".join(celdas)
+            extraer_pares_dia_uf_desde_texto(texto, anio, mes, valores)
+    return valores
+
+
+def parsear_uf_texto_por_mes(soup, anio):
     valores = {}
     mes_actual = None
-
-    for line in lines:
+    for raw_line in soup.get_text("\n").splitlines():
+        line = normalizar(raw_line)
         lower = line.lower()
         if lower in MESES_INV:
             mes_actual = MESES_INV[lower]
             continue
+        if lower.startswith("dia ") or lower.startswith("día "):
+            mes_actual = None
+            continue
         if not mes_actual:
             continue
-        for dia_texto, valor_texto in re.findall(r"(?<!\d)(\d{1,2})\s+(\d{1,2}\.\d{3},\d{2})(?!\d)", line):
-            dia = int(dia_texto)
-            if dia < 1 or dia > last_day(anio, mes_actual):
-                continue
-            valor = limpiar_decimal_chileno(valor_texto)
-            if validar_uf(valor):
-                fecha = date(anio, mes_actual, dia).isoformat()
-                valores.setdefault(fecha, round(float(valor), 2))
+        extraer_pares_dia_uf_desde_texto(line, anio, mes_actual, valores)
+    return valores
 
+
+def parsear_uf_tabla_resumen(soup, anio):
+    valores = {}
+    for tabla in soup.find_all("table"):
+        filas = tabla.find_all("tr")
+        encabezado_meses = []
+        for fila in filas:
+            celdas = [normalizar(c.get_text(" ", strip=True)).lower() for c in fila.find_all(["td", "th"])]
+            if celdas and (celdas[0] in ("dia", "día")):
+                encabezado_meses = [MESES_CORTOS.get(c[:3]) for c in celdas[1:]]
+                continue
+            if not encabezado_meses or not celdas or not celdas[0].isdigit():
+                continue
+            dia = int(celdas[0])
+            for idx, valor_texto in enumerate(celdas[1:]):
+                if idx >= len(encabezado_meses):
+                    break
+                mes = encabezado_meses[idx]
+                if mes:
+                    agregar_uf_valor(valores, anio, mes, dia, valor_texto)
+    return valores
+
+
+def obtener_uf_diaria_sii(anio):
+    html = get_html(sii_uf_url(anio), timeout=45, referer="https://www.sii.cl/valores_y_fechas/")
+    soup = BeautifulSoup(html, "html.parser")
+    valores = {}
+    for extractor in (parsear_uf_tablas_por_mes, parsear_uf_texto_por_mes, parsear_uf_tabla_resumen):
+        try:
+            valores.update(extractor(soup, anio))
+        except Exception as e:
+            print(f"Extractor UF {extractor.__name__} fallo: {e}")
     if not valores:
         raise RuntimeError(f"No se encontraron valores UF para {anio} en SII")
-    return valores
+    return dict(sorted(valores.items()))
 
 
 def obtener_uf_mindicador():
@@ -335,19 +409,34 @@ def obtener_uf_mindicador():
 
 def cargar_o_actualizar_uf_anual(anio, hasta=None):
     hasta = hasta or chile_today()
+    hoy = chile_today()
     existente = read_json(uf_path(anio), {"anio": anio, "fuente": "SII", "valores": {}}) or {}
     valores = dict(existente.get("valores", {}))
     estado = "online_sii"
 
     try:
         valores_sii = obtener_uf_diaria_sii(anio)
+        agregados = 0
         for fecha, valor in valores_sii.items():
             fecha_dt = date.fromisoformat(fecha)
             if fecha_dt <= hasta:
                 valores[fecha] = valor
+                agregados += 1
+        if agregados == 0:
+            raise RuntimeError(f"SII no entrego valores hasta {hasta.isoformat()}")
     except Exception as e:
         print(f"No se pudo actualizar UF diaria desde SII: {e}")
         estado = "respaldo" if valores else "manual_requerido"
+        if anio == hoy.year and hoy <= hasta:
+            if hoy.isoformat() in valores:
+                estado = "respaldo"
+            else:
+                try:
+                    valores[hoy.isoformat()] = round(obtener_uf_mindicador(), 2)
+                    estado = "respaldo"
+                except Exception as fallback_error:
+                    print(f"No se pudo agregar UF actual como respaldo parcial: {fallback_error}")
+                    estado = "respaldo" if valores else "manual_requerido"
 
     data = {
         "anio": anio,
@@ -360,7 +449,7 @@ def cargar_o_actualizar_uf_anual(anio, hasta=None):
 
 
 def obtener_utm_actual(anio, mes):
-    html = get_html(sii_utm_url(anio), timeout=30)
+    html = get_html(sii_utm_url(anio), timeout=30, referer="https://www.sii.cl/valores_y_fechas/")
     soup = BeautifulSoup(html, "html.parser")
     texto = soup.get_text(" ", strip=True)
     patron = rf"{MESES[mes]}\s+\$?\s*([\d\.]+)"
@@ -402,7 +491,7 @@ def buscar_tabla_impuesto_mes(soup, mes_nombre, anio):
 
 
 def obtener_tramos_impuesto_actual(anio, mes, utm):
-    html = get_html(sii_impuesto_url(anio), timeout=30)
+    html = get_html(sii_impuesto_url(anio), timeout=30, referer="https://www.sii.cl/valores_y_fechas/")
     soup = BeautifulSoup(html, "html.parser")
     tabla = buscar_tabla_impuesto_mes(soup, MESES[mes], anio)
     filas = tabla.find_all("tr")
@@ -467,7 +556,7 @@ def obtener_afp_actuales(afp_respaldo):
         html = None
         for intento in range(3):
             try:
-                html = get_html(AFP_URL, timeout=60)
+                html = get_html(AFP_URL, timeout=60, referer="https://www.spensiones.cl/")
                 break
             except Exception as e:
                 print(f"Intento AFP {intento + 1} fallo: {e}")
@@ -545,8 +634,8 @@ def build_snapshot(anio, mes, current=False, uf_values=None):
         estado_uf_file = "online_sii"
 
     uf = uf_values.get(fecha_uf.isoformat())
-    estado_uf = "online_sii" if uf else estado_uf_file
-    fuente_uf = sii_uf_url(anio) if uf else "respaldo_local"
+    estado_uf = estado_uf_file if uf else estado_uf_file
+    fuente_uf = sii_uf_url(anio) if uf and estado_uf_file == "online_sii" else "respaldo_local"
 
     if not uf:
         if current:
@@ -559,6 +648,7 @@ def build_snapshot(anio, mes, current=False, uf_values=None):
         if not uf:
             uf = actual.get("uf")
             estado_uf = "respaldo" if validar_uf(uf) else "manual_requerido"
+            fuente_uf = "respaldo_local"
 
     topes, fuente_topes = manual_topes(periodo)
     laboral, fuente_laboral = manual_laboral(periodo)
