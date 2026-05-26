@@ -1,11 +1,13 @@
 {
-  "imm": [
+  "vigencias": [
     {
-      "desde": "2026-01",
+      "desde": "2026-01-01",
       "hasta": null,
-      "valor": 539000,
+      "imm": 539000,
       "fechaVigencia": "2026-01-01",
-      "fuente": "manual"
+      "estado": "manual_validado",
+      "fuente": "manual",
+      "nota": "IMM ingresado manualmente y validado para pruebas beta"
     }
   ]
 }
