@@ -1,0 +1,12 @@
+{
+  "topes": [
+    {
+      "desde": "2026-01",
+      "hasta": null,
+      "afpSaludUf": 90.0,
+      "cesantiaUf": 135.2,
+      "fuente": "manual_respaldo",
+      "nota": "Verificar contra resoluciones oficiales de la Superintendencia de Pensiones para reconstrucciones historicas."
+    }
+  ]
+}

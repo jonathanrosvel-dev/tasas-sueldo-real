@@ -1,21 +1,39 @@
+import argparse
+import calendar
 import json
-import re
 import os
-from datetime import datetime
+import re
+from datetime import date, datetime
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import requests
 from bs4 import BeautifulSoup
 
+ROOT = Path(__file__).resolve().parents[1]
+TASAS_JSON = ROOT / "tasas.json"
+HISTORICO_DIR = ROOT / "tasas" / "historico"
+PERIODOS_DIR = HISTORICO_DIR / "periodos"
+UF_DIR = HISTORICO_DIR / "uf"
+MANUAL_DIR = HISTORICO_DIR / "manual"
+INDEX_PATH = HISTORICO_DIR / "index.json"
+
 AFP_URL = "https://www.spensiones.cl/portal/institucional/594/w3-article-2810.html"
+FUENTE_TOPES_MANUAL = "tasas/historico/manual/topes.json"
+FUENTE_LABORAL_MANUAL = "tasas/historico/manual/laboral.json"
+FUENTE_CESANTIA_MANUAL = "tasas/historico/manual/cesantia.json"
+FUENTE_AFP_MANUAL = "tasas/historico/manual/afp_comisiones.json"
 
 MESES = {
     1: "Enero", 2: "Febrero", 3: "Marzo", 4: "Abril",
     5: "Mayo", 6: "Junio", 7: "Julio", 8: "Agosto",
     9: "Septiembre", 10: "Octubre", 11: "Noviembre", 12: "Diciembre"
 }
-
-AFP_NOMBRES = ["Capital", "Cuprum", "Habitat", "Modelo", "PlanVital", "Provida", "Uno"]
+MESES_CORTOS = {
+    "ene": 1, "feb": 2, "mar": 3, "abr": 4, "may": 5, "jun": 6,
+    "jul": 7, "ago": 8, "sep": 9, "oct": 10, "nov": 11, "dic": 12
+}
+MESES_INV = {v.lower(): k for k, v in MESES.items()}
 
 AFP_FALLBACK = [
     {"nombre": "Capital", "comision": 0.0144},
@@ -24,7 +42,7 @@ AFP_FALLBACK = [
     {"nombre": "Modelo", "comision": 0.0058},
     {"nombre": "PlanVital", "comision": 0.0116},
     {"nombre": "Provida", "comision": 0.0145},
-    {"nombre": "Uno", "comision": 0.0049}
+    {"nombre": "Uno", "comision": 0.0046}
 ]
 
 TRAMOS_UTM_FALLBACK = [
@@ -38,118 +56,84 @@ TRAMOS_UTM_FALLBACK = [
     {"desdeUtm": 310, "hastaUtm": None, "factor": 0.40, "rebajaUtm": 38.82}
 ]
 
-TOPES_FALLBACK = {
-    "afpSaludUf": 90,
-    "cesantiaUf": 135.2
-}
-
 UF_MIN = 30000
 UF_MAX = 60000
+UTM_MIN = 50000
+UTM_MAX = 100000
+
+OK_STATES = {"online", "online_sii", "online_mindicador", "ok", "validado"}
+INCOMPLETE_STATES = {"manual", "respaldo"}
+REQUIRED_STATES = {"manual_requerido", "faltante", "error", "invalido"}
+ESSENTIAL_STATUS_KEYS = (
+    "uf",
+    "utm",
+    "impuestoUnico",
+    "afp",
+    "topes",
+    "imm",
+    "salud",
+    "cesantia",
+)
+ALERT_MANUAL_KEYS = {"afp", "topes"}
+UF_VALUE_RE = r"\d{1,3}(?:\.\d{3})*,\d{2}"
+
+DEFAULT_MANUAL_FILES = {
+    "laboral.json": {
+        "imm": [
+            {
+                "desde": "2026-01",
+                "hasta": None,
+                "valor": 539000,
+                "fechaVigencia": "2026-01-01",
+                "fuente": "manual"
+            }
+        ]
+    },
+    "cesantia.json": {
+        "cesantia": [
+            {
+                "desde": "2026-01",
+                "hasta": None,
+                "trabajadorIndefinido": 0.006,
+                "trabajadorPlazoFijo": 0.0,
+                "fuente": "manual"
+            }
+        ]
+    },
+    "topes.json": {
+        "topes": [
+            {
+                "desde": "2026-01",
+                "hasta": None,
+                "afpSaludUf": 90.0,
+                "cesantiaUf": 135.2,
+                "fuente": "manual_respaldo",
+                "nota": "Verificar contra resoluciones oficiales de la Superintendencia de Pensiones para reconstrucciones historicas."
+            }
+        ]
+    },
+    "afp_comisiones.json": {
+        "afp": [
+            {
+                "desde": "2026-01",
+                "hasta": None,
+                "fuente": "manual_respaldo",
+                "nota": "Respaldo manual usado solo si no hay fuente historica automatica confiable.",
+                "comisiones": AFP_FALLBACK
+            }
+        ]
+    }
+}
+
+
+def chile_today():
+    return datetime.now(ZoneInfo("America/Santiago")).date()
+
 
 def sii_uf_url(anio):
     return f"https://www.sii.cl/valores_y_fechas/uf/uf{anio}.htm"
 
 
-def limpiar_decimal_chileno(texto):
-    texto = texto or ""
-    texto = texto.replace("$", "").replace(" ", "")
-    texto = texto.replace(".", "").replace(",", ".")
-    texto = re.sub(r"[^0-9.\-]", "", texto)
-
-    if texto in ("", "-", "--"):
-        return None
-
-    return float(texto)
-
-
-def validar_uf(uf):
-    if uf is None:
-        return False
-
-    return UF_MIN <= float(uf) <= UF_MAX
-
-
-def obtener_uf_sii(anio, mes, dia):
-    url = sii_uf_url(anio)
-    html = get_html(url, timeout=30)
-    soup = BeautifulSoup(html, "html.parser")
-
-    for fila in soup.find_all("tr"):
-        celdas = [c.get_text(" ", strip=True) for c in fila.find_all(["td", "th"])]
-
-        if not celdas:
-            continue
-
-        for i in range(0, len(celdas) - 1, 2):
-            dia_texto = normalizar(celdas[i]).strip()
-
-            if dia_texto == str(dia):
-                valor = limpiar_decimal_chileno(celdas[i + 1])
-
-                if validar_uf(valor):
-                    return valor
-
-    raise RuntimeError(f"No se pudo encontrar UF válida en SII para {dia}-{mes}-{anio}")
-
-
-def obtener_uf_mindicador():
-    url = "https://mindicador.cl/api/uf"
-    response = requests.get(url, timeout=30)
-    response.raise_for_status()
-
-    data = response.json()
-    valor = data["serie"][0]["valor"]
-
-    if validar_uf(valor):
-        return float(valor)
-
-    raise RuntimeError(f"UF inválida desde mindicador.cl: {valor}")
-
-
-def obtener_uf_blindada(anio, mes, dia, actual):
-    try:
-        uf = obtener_uf_sii(anio, mes, dia)
-        return uf, "online_sii", sii_uf_url(anio)
-
-    except Exception as e:
-        print(f"No se pudo actualizar UF desde SII: {e}")
-
-    try:
-        uf = obtener_uf_mindicador()
-        return uf, "online_mindicador", "https://mindicador.cl/api/uf"
-
-    except Exception as e:
-        print(f"No se pudo actualizar UF desde mindicador.cl: {e}")
-
-    uf_respaldo = actual.get("uf")
-
-    if validar_uf(uf_respaldo):
-        return float(uf_respaldo), "respaldo", "respaldo_local"
-
-    raise RuntimeError("No hay UF válida disponible ni online ni en respaldo local")
-
-UTM_MIN = 50000
-UTM_MAX = 100000
-
-def validar_utm(utm):
-    return utm is not None and UTM_MIN <= utm <= UTM_MAX
-
-
-def obtener_utm_blindada(anio, mes, actual):
-    try:
-        utm = obtener_utm_actual(anio, mes)
-        if validar_utm(utm):
-            return utm, "online", sii_utm_url(anio)
-    except Exception as e:
-        print(f"UTM SII falló: {e}")
-
-    utm_respaldo = actual.get("utm")
-
-    if validar_utm(utm_respaldo):
-        return utm_respaldo, "respaldo", "respaldo_local"
-
-    raise RuntimeError("No hay UTM válida disponible")
-    
 def sii_utm_url(anio):
     return f"https://www.sii.cl/valores_y_fechas/utm/utm{anio}.htm"
 
@@ -158,16 +142,52 @@ def sii_impuesto_url(anio):
     return f"https://www.sii.cl/valores_y_fechas/impuesto_2da_categoria/impuesto{anio}.htm"
 
 
-def cargar_json_actual():
+def ensure_dirs():
+    HISTORICO_DIR.mkdir(parents=True, exist_ok=True)
+    PERIODOS_DIR.mkdir(parents=True, exist_ok=True)
+    UF_DIR.mkdir(parents=True, exist_ok=True)
+    MANUAL_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def read_json(path, default=None):
     try:
-        with open("tasas.json", "r", encoding="utf-8") as f:
+        with path.open("r", encoding="utf-8") as f:
             return json.load(f)
-    except Exception:
-        return {}
+    except FileNotFoundError:
+        return default
+
+
+def write_json(path, data):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+        f.write("\n")
+
+
+def ensure_manual_files():
+    ensure_dirs()
+    for filename, content in DEFAULT_MANUAL_FILES.items():
+        path = MANUAL_DIR / filename
+        if not path.exists():
+            write_json(path, content)
+
+
+def cargar_json_actual():
+    return read_json(TASAS_JSON, {}) or {}
 
 
 def normalizar(texto):
     return re.sub(r"\s+", " ", texto or "").strip()
+
+
+def limpiar_decimal_chileno(texto):
+    texto = texto or ""
+    texto = texto.replace("$", "").replace(" ", "")
+    texto = texto.replace(".", "").replace(",", ".")
+    texto = re.sub(r"[^0-9.\-]", "", texto)
+    if texto in ("", "-", "--"):
+        return None
+    return float(texto)
 
 
 def limpiar_entero_chileno(texto):
@@ -176,105 +196,321 @@ def limpiar_entero_chileno(texto):
 
 
 def limpiar_monto_chileno(texto):
-    texto = texto or ""
-    texto = texto.replace("$", "").replace(" ", "").replace(".", "").replace(",", ".")
-    texto = re.sub(r"[^0-9.\-]", "", texto)
-    if texto in ("", "-", "--"):
-        return None
-    return float(texto)
+    return limpiar_decimal_chileno(texto)
 
 
 def limpiar_factor(texto):
-    texto = texto or ""
-    texto = texto.replace(",", ".")
+    texto = (texto or "").replace(",", ".")
     match = re.search(r"\d+(?:\.\d+)?", texto)
     return float(match.group(0)) if match else 0.0
 
 
 def porcentaje_a_decimal(texto):
-    texto = texto.replace("%", "").replace(",", ".").strip()
+    texto = (texto or "").replace("%", "").replace(",", ".").strip()
     return round(float(texto) / 100, 6)
 
 
-def get_html(url, timeout=30):
+def validar_uf(uf):
+    return uf is not None and UF_MIN <= float(uf) <= UF_MAX
+
+
+def validar_utm(utm):
+    return utm is not None and UTM_MIN <= float(utm) <= UTM_MAX
+
+
+def get_html(url, timeout=30, referer=None):
     headers = {
-        "User-Agent": "Mozilla/5.0 (compatible; SueldoRealChileBot/1.0)"
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/125.0.0.0 Safari/537.36"
+        ),
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+        "Accept-Language": "es-CL,es;q=0.9,en;q=0.8",
+        "Connection": "keep-alive",
+        "Upgrade-Insecure-Requests": "1",
     }
+    if referer:
+        headers["Referer"] = referer
     r = requests.get(url, timeout=timeout, headers=headers)
     r.raise_for_status()
     return r.text
 
 
-def obtener_utm_actual(anio, mes):
-    url = sii_utm_url(anio)
-    mes_nombre = MESES[mes]
+def parse_period(periodo):
+    match = re.fullmatch(r"(\d{4})-(\d{2})", periodo)
+    if not match:
+        raise ValueError(f"Periodo invalido: {periodo}. Usa YYYY-MM.")
+    return int(match.group(1)), int(match.group(2))
 
-    html = get_html(url, timeout=30)
+
+def period_key(anio, mes):
+    return f"{anio:04d}-{mes:02d}"
+
+
+def period_path(anio, mes):
+    return PERIODOS_DIR / f"{anio:04d}" / f"{period_key(anio, mes)}.json"
+
+
+def uf_path(anio):
+    return UF_DIR / f"uf_diaria_{anio}.json"
+
+
+def last_day(anio, mes):
+    return calendar.monthrange(anio, mes)[1]
+
+
+def month_iter(start_period, end_period):
+    anio, mes = parse_period(start_period)
+    end_anio, end_mes = parse_period(end_period)
+    while (anio, mes) <= (end_anio, end_mes):
+        yield anio, mes
+        mes += 1
+        if mes == 13:
+            mes = 1
+            anio += 1
+
+
+def resolve_vigencia(items, periodo):
+    candidatos = []
+    for item in items:
+        desde = item.get("desde", "0000-00")
+        hasta = item.get("hasta")
+        if desde <= periodo and (hasta is None or periodo <= hasta):
+            candidatos.append(item)
+    if not candidatos:
+        raise RuntimeError(f"No hay vigencia manual para {periodo}")
+    return sorted(candidatos, key=lambda x: x.get("desde", ""))[-1]
+
+
+def manual_laboral(periodo):
+    data = read_json(MANUAL_DIR / "laboral.json", DEFAULT_MANUAL_FILES["laboral.json"])
+    item = resolve_vigencia(data.get("imm", []), periodo)
+    return {"imm": item["valor"], "fechaImm": item.get("fechaVigencia")}, item.get("fuente", FUENTE_LABORAL_MANUAL)
+
+
+def manual_cesantia(periodo):
+    data = read_json(MANUAL_DIR / "cesantia.json", DEFAULT_MANUAL_FILES["cesantia.json"])
+    item = resolve_vigencia(data.get("cesantia", []), periodo)
+    return {
+        "trabajadorIndefinido": item["trabajadorIndefinido"],
+        "trabajadorPlazoFijo": item.get("trabajadorPlazoFijo", 0.0)
+    }, item.get("fuente", FUENTE_CESANTIA_MANUAL)
+
+
+def manual_topes(periodo):
+    data = read_json(MANUAL_DIR / "topes.json", DEFAULT_MANUAL_FILES["topes.json"])
+    item = resolve_vigencia(data.get("topes", []), periodo)
+    return {
+        "afpSaludUf": item["afpSaludUf"],
+        "cesantiaUf": item["cesantiaUf"]
+    }, item.get("fuente", FUENTE_TOPES_MANUAL)
+
+
+def manual_afp(periodo):
+    data = read_json(MANUAL_DIR / "afp_comisiones.json", DEFAULT_MANUAL_FILES["afp_comisiones.json"])
+    item = resolve_vigencia(data.get("afp", []), periodo)
+    return item.get("comisiones", AFP_FALLBACK), item.get("fuente", FUENTE_AFP_MANUAL)
+
+
+def agregar_uf_valor(valores, anio, mes, dia, valor_texto):
+    if dia < 1 or dia > last_day(anio, mes):
+        return
+    valor = limpiar_decimal_chileno(valor_texto)
+    if validar_uf(valor):
+        valores[date(anio, mes, dia).isoformat()] = round(float(valor), 2)
+
+
+def extraer_pares_dia_uf_desde_texto(texto, anio, mes, valores):
+    patron = rf"(?<![\d.,])(\d{{1,2}})\s+({UF_VALUE_RE})(?![\d.,])"
+    for dia_texto, valor_texto in re.findall(patron, texto):
+        agregar_uf_valor(valores, anio, mes, int(dia_texto), valor_texto)
+
+
+def parsear_uf_tablas_por_mes(soup, anio):
+    valores = {}
+    for titulo in soup.find_all(["h1", "h2", "h3", "h4"]):
+        mes_nombre = normalizar(titulo.get_text()).lower()
+        if mes_nombre not in MESES_INV:
+            continue
+        mes = MESES_INV[mes_nombre]
+        tabla = titulo.find_next("table")
+        if not tabla:
+            continue
+        for fila in tabla.find_all("tr"):
+            celdas = [normalizar(c.get_text(" ", strip=True)) for c in fila.find_all(["td", "th"])]
+            texto = " ".join(celdas)
+            extraer_pares_dia_uf_desde_texto(texto, anio, mes, valores)
+    return valores
+
+
+def parsear_uf_texto_por_mes(soup, anio):
+    valores = {}
+    mes_actual = None
+    for raw_line in soup.get_text("\n").splitlines():
+        line = normalizar(raw_line)
+        lower = line.lower()
+        if lower in MESES_INV:
+            mes_actual = MESES_INV[lower]
+            continue
+        if lower.startswith("dia ") or lower.startswith("día "):
+            mes_actual = None
+            continue
+        if not mes_actual:
+            continue
+        extraer_pares_dia_uf_desde_texto(line, anio, mes_actual, valores)
+    return valores
+
+
+def parsear_uf_tabla_resumen(soup, anio):
+    valores = {}
+    for tabla in soup.find_all("table"):
+        filas = tabla.find_all("tr")
+        encabezado_meses = []
+        for fila in filas:
+            celdas = [normalizar(c.get_text(" ", strip=True)).lower() for c in fila.find_all(["td", "th"])]
+            if celdas and (celdas[0] in ("dia", "día")):
+                encabezado_meses = [MESES_CORTOS.get(c[:3]) for c in celdas[1:]]
+                continue
+            if not encabezado_meses or not celdas or not celdas[0].isdigit():
+                continue
+            dia = int(celdas[0])
+            for idx, valor_texto in enumerate(celdas[1:]):
+                if idx >= len(encabezado_meses):
+                    break
+                mes = encabezado_meses[idx]
+                if mes:
+                    agregar_uf_valor(valores, anio, mes, dia, valor_texto)
+    return valores
+
+
+def obtener_uf_diaria_sii(anio):
+    html = get_html(sii_uf_url(anio), timeout=45, referer="https://www.sii.cl/valores_y_fechas/")
+    soup = BeautifulSoup(html, "html.parser")
+    valores = {}
+    for extractor in (parsear_uf_tablas_por_mes, parsear_uf_texto_por_mes, parsear_uf_tabla_resumen):
+        try:
+            valores.update(extractor(soup, anio))
+        except Exception as e:
+            print(f"Extractor UF {extractor.__name__} fallo: {e}")
+    if not valores:
+        raise RuntimeError(f"No se encontraron valores UF para {anio} en SII")
+    return dict(sorted(valores.items()))
+
+
+def obtener_uf_mindicador():
+    response = requests.get("https://mindicador.cl/api/uf", timeout=30)
+    response.raise_for_status()
+    valor = response.json()["serie"][0]["valor"]
+    if validar_uf(valor):
+        return float(valor)
+    raise RuntimeError(f"UF invalida desde mindicador.cl: {valor}")
+
+
+def cargar_o_actualizar_uf_anual(anio, hasta=None):
+    hasta = hasta or chile_today()
+    hoy = chile_today()
+    existente = read_json(uf_path(anio), {"anio": anio, "fuente": "SII", "valores": {}}) or {}
+    valores = dict(existente.get("valores", {}))
+    estado = "online_sii"
+
+    try:
+        valores_sii = obtener_uf_diaria_sii(anio)
+        agregados = 0
+        for fecha, valor in valores_sii.items():
+            fecha_dt = date.fromisoformat(fecha)
+            if fecha_dt <= hasta:
+                valores[fecha] = valor
+                agregados += 1
+        if agregados == 0:
+            raise RuntimeError(f"SII no entrego valores hasta {hasta.isoformat()}")
+    except Exception as e:
+        print(f"No se pudo actualizar UF diaria desde SII: {e}")
+        estado = "respaldo" if valores else "manual_requerido"
+        if anio == hoy.year and hoy <= hasta:
+            if hoy.isoformat() in valores:
+                estado = "respaldo"
+            else:
+                try:
+                    valores[hoy.isoformat()] = round(obtener_uf_mindicador(), 2)
+                    estado = "respaldo"
+                except Exception as fallback_error:
+                    print(f"No se pudo agregar UF actual como respaldo parcial: {fallback_error}")
+                    estado = "respaldo" if valores else "manual_requerido"
+
+    data = {
+        "anio": anio,
+        "fuente": "SII",
+        "fechaActualizacion": chile_today().isoformat(),
+        "valores": dict(sorted(valores.items()))
+    }
+    write_json(uf_path(anio), data)
+    return data, estado
+
+
+def obtener_utm_actual(anio, mes):
+    html = get_html(sii_utm_url(anio), timeout=30, referer="https://www.sii.cl/valores_y_fechas/")
     soup = BeautifulSoup(html, "html.parser")
     texto = soup.get_text(" ", strip=True)
-
-    patron = rf"{mes_nombre}\s+\$?\s*([\d\.]+)"
+    patron = rf"{MESES[mes]}\s+\$?\s*([\d\.]+)"
     match = re.search(patron, texto, re.IGNORECASE)
-
     if not match:
-        raise RuntimeError(f"No se pudo encontrar UTM para {mes_nombre} {anio}")
-
+        raise RuntimeError(f"No se pudo encontrar UTM para {MESES[mes]} {anio}")
     return limpiar_entero_chileno(match.group(1))
+
+
+def obtener_utm_blindada(anio, mes, actual):
+    try:
+        utm = obtener_utm_actual(anio, mes)
+        if validar_utm(utm):
+            return utm, "online", sii_utm_url(anio)
+    except Exception as e:
+        print(f"UTM SII fallo: {e}")
+
+    utm_respaldo = actual.get("utm")
+    if validar_utm(utm_respaldo):
+        return utm_respaldo, "respaldo", "respaldo_local"
+    raise RuntimeError("No hay UTM valida disponible")
 
 
 def buscar_tabla_impuesto_mes(soup, mes_nombre, anio):
     titulo_buscado = f"{mes_nombre} {anio}".lower()
-
     for tag in soup.find_all(["h1", "h2", "h3", "h4"]):
         texto = normalizar(tag.get_text()).lower()
         if titulo_buscado in texto:
             tabla = tag.find_next("table")
             if tabla:
                 return tabla
-
     texto_completo = soup.get_text(" ", strip=True).lower()
     if titulo_buscado not in texto_completo:
-        raise RuntimeError(f"No se encontró el título {mes_nombre} {anio}")
-
+        raise RuntimeError(f"No se encontro el titulo {mes_nombre} {anio}")
     tabla = soup.find("table")
     if not tabla:
-        raise RuntimeError("No se encontró tabla de impuesto")
-
+        raise RuntimeError("No se encontro tabla de impuesto")
     return tabla
 
 
 def obtener_tramos_impuesto_actual(anio, mes, utm):
-    url = sii_impuesto_url(anio)
-    mes_nombre = MESES[mes]
-
-    html = get_html(url, timeout=30)
+    html = get_html(sii_impuesto_url(anio), timeout=30, referer="https://www.sii.cl/valores_y_fechas/")
     soup = BeautifulSoup(html, "html.parser")
-    tabla = buscar_tabla_impuesto_mes(soup, mes_nombre, anio)
-
+    tabla = buscar_tabla_impuesto_mes(soup, MESES[mes], anio)
     filas = tabla.find_all("tr")
     tramos = []
     dentro_mensual = False
 
     for fila in filas:
         celdas = [normalizar(c.get_text(" ", strip=True)) for c in fila.find_all(["td", "th"])]
-
         if not celdas:
             continue
-
         fila_txt = " ".join(celdas).upper()
-
         if "MENSUAL" in fila_txt:
             dentro_mensual = True
-
         if dentro_mensual and "QUINCENAL" in fila_txt:
             break
-
         if not dentro_mensual:
             continue
 
-        valores_monto = [c for c in celdas if "$" in c or "MÁS" in c.upper() or "--" in c]
-        factores = [c for c in celdas if re.fullmatch(r"\d+(?:,\d+)?", c)]
-
+        valores_monto = [c for c in celdas if "$" in c or "MÁS" in c.upper() or "MAS" in c.upper() or "--" in c]
         if len(valores_monto) < 2:
             continue
 
@@ -286,9 +522,8 @@ def obtener_tramos_impuesto_actual(anio, mes, utm):
 
         desde_texto = valores_monto[0]
         hasta_texto = valores_monto[1]
-
         desde_pesos = limpiar_monto_chileno(desde_texto) or 0.0
-        hasta_pesos = None if "MÁS" in hasta_texto.upper() else limpiar_monto_chileno(hasta_texto)
+        hasta_pesos = None if "MÁS" in hasta_texto.upper() or "MAS" in hasta_texto.upper() else limpiar_monto_chileno(hasta_texto)
 
         rebaja_pesos = 0.0
         for c in celdas:
@@ -305,62 +540,31 @@ def obtener_tramos_impuesto_actual(anio, mes, utm):
             "rebajaUtm": round(rebaja_pesos / utm, 6)
         })
 
-        
-    # --- POST PROCESO DE TRAMOS ---
-    
-    # Si faltó el tramo exento
     if len(tramos) == 7:
-        print("Solo se encontraron 7 tramos. Se agregará tramo exento automáticamente.")
-    
-        tramo_exento = {
-            "desdeUtm": 0,
-            "hastaUtm": 13.5,
-            "factor": 0.0,
-            "rebajaUtm": 0.0
-        }
-    
-        tramos.insert(0, tramo_exento)
-    
-    # Validación mínima
+        tramos.insert(0, {"desdeUtm": 0, "hastaUtm": 13.5, "factor": 0.0, "rebajaUtm": 0.0})
     if len(tramos) < 7:
-        raise RuntimeError(
-            f"Error grave: se extrajeron muy pocos tramos ({len(tramos)})"
-        )
-    
-    # Normalizar siempre a 8 tramos
+        raise RuntimeError(f"Se extrajeron muy pocos tramos ({len(tramos)})")
+
     tramos = tramos[:8]
-    
-    # Forzar primer tramo correcto (exento)
-    tramos[0] = {
-        "desdeUtm": 0,
-        "hastaUtm": 13.5,
-        "factor": 0.0,
-        "rebajaUtm": 0.0
-    }
-    
-    # Forzar último tramo abierto
+    tramos[0] = {"desdeUtm": 0, "hastaUtm": 13.5, "factor": 0.0, "rebajaUtm": 0.0}
     tramos[-1]["hastaUtm"] = None
-    
     return tramos
 
 
 def obtener_afp_actuales(afp_respaldo):
     try:
         html = None
-
         for intento in range(3):
             try:
-                html = get_html(AFP_URL, timeout=60)
+                html = get_html(AFP_URL, timeout=60, referer="https://www.spensiones.cl/")
                 break
             except Exception as e:
-                print(f"Intento AFP {intento + 1} falló: {e}")
-
+                print(f"Intento AFP {intento + 1} fallo: {e}")
         if html is None:
-            raise RuntimeError("No se pudo conectar con la fuente AFP después de 3 intentos")
+            raise RuntimeError("No se pudo conectar con la fuente AFP despues de 3 intentos")
 
         soup = BeautifulSoup(html, "html.parser")
         texto = normalizar(soup.get_text(" ", strip=True))
-
         aliases = {
             "Capital": ["Capital"],
             "Cuprum": ["Cuprum"],
@@ -370,216 +574,405 @@ def obtener_afp_actuales(afp_respaldo):
             "Provida": ["Provida", "ProVida", "Pro Vida"],
             "Uno": ["Uno", "UNO"]
         }
-
         resultado = []
-
         for nombre_final, nombres_posibles in aliases.items():
             encontrado = None
-
             for nombre_web in nombres_posibles:
                 patrones = [
                     rf"AFP\s+{re.escape(nombre_web)}\s*[:\-]?\s*(\d{{1,2}}[,.]\d{{1,3}})\s*%",
                     rf"{re.escape(nombre_web)}\s*[:\-]?\s*(\d{{1,2}}[,.]\d{{1,3}})\s*%",
                     rf"{re.escape(nombre_web)}.*?(\d{{1,2}}[,.]\d{{1,3}})\s*%"
                 ]
-
                 for patron in patrones:
                     match = re.search(patron, texto, re.IGNORECASE)
-
                     if match:
                         encontrado = porcentaje_a_decimal(match.group(1))
                         break
-
                 if encontrado is not None:
                     break
-
             if encontrado is None:
-                raise RuntimeError(f"No se encontró comisión AFP {nombre_final}")
-
-            # Validación lógica: comisión AFP normal entre 0% y 3%
+                raise RuntimeError(f"No se encontro comision AFP {nombre_final}")
             if encontrado < 0 or encontrado > 0.03:
-                raise RuntimeError(f"Comisión AFP fuera de rango para {nombre_final}: {encontrado}")
-
-            resultado.append({
-                "nombre": nombre_final,
-                "comision": encontrado
-            })
+                raise RuntimeError(f"Comision AFP fuera de rango para {nombre_final}: {encontrado}")
+            resultado.append({"nombre": nombre_final, "comision": encontrado})
 
         if len(resultado) != 7:
             raise RuntimeError(f"Se esperaban 7 AFP, se encontraron {len(resultado)}")
-
-        return resultado, "online"
-
+        return resultado, "online", AFP_URL
     except Exception as e:
-        print(f"No se pudieron actualizar AFP automáticamente: {e}")
-        print("Se usarán AFP guardadas o fallback.")
-        return afp_respaldo or AFP_FALLBACK, "respaldo"
+        print(f"No se pudieron actualizar AFP automaticamente: {e}")
+        return afp_respaldo or AFP_FALLBACK, "respaldo", "respaldo_local"
+
+
+def calcular_estado_periodo(current, estado_actualizacion):
+    if current:
+        return "vigente"
+    estados = [estado_actualizacion.get(k) for k in ESSENTIAL_STATUS_KEYS]
+    if any(not estado or estado in REQUIRED_STATES for estado in estados):
+        return "manual_requerido"
+    if all(estado in OK_STATES for estado in estados):
+        return "cerrado"
+    if any(estado in INCOMPLETE_STATES for estado in estados):
+        return "incompleto"
+    return "incompleto"
+
+
+def build_snapshot(anio, mes, current=False, uf_values=None):
+    ensure_manual_files()
+    actual = cargar_json_actual()
+    periodo = period_key(anio, mes)
+    hoy = chile_today()
+    cierre = date(anio, mes, last_day(anio, mes))
+    fecha_uf = hoy if current else cierre
+    if fecha_uf > hoy:
+        fecha_uf = hoy
+
+    if uf_values is None:
+        uf_data, estado_uf_file = cargar_o_actualizar_uf_anual(anio, hasta=fecha_uf)
+        uf_values = uf_data.get("valores", {})
+    else:
+        estado_uf_file = "online_sii"
+
+    uf = uf_values.get(fecha_uf.isoformat())
+    estado_uf = estado_uf_file if uf else estado_uf_file
+    fuente_uf = sii_uf_url(anio) if uf and estado_uf_file == "online_sii" else "respaldo_local"
+
+    if not uf:
+        if current:
+            try:
+                uf = obtener_uf_mindicador()
+                estado_uf = "online_mindicador"
+                fuente_uf = "https://mindicador.cl/api/uf"
+            except Exception as e:
+                print(f"UF mindicador fallo: {e}")
+        if not uf:
+            uf = actual.get("uf")
+            estado_uf = "respaldo" if validar_uf(uf) else "manual_requerido"
+            fuente_uf = "respaldo_local"
+
+    topes, fuente_topes = manual_topes(periodo)
+    laboral, fuente_laboral = manual_laboral(periodo)
+    cesantia, fuente_cesantia = manual_cesantia(periodo)
+
+    utm, estado_utm, fuente_utm = obtener_utm_blindada(anio, mes, actual)
+
+    try:
+        tramos = obtener_tramos_impuesto_actual(anio, mes, utm)
+        estado_impuesto = "online"
+        fuente_impuesto = sii_impuesto_url(anio)
+    except Exception as e:
+        print(f"No se pudo actualizar impuesto unico desde SII: {e}")
+        tramos = actual.get("impuestoUnico", {}).get("tramos", TRAMOS_UTM_FALLBACK)
+        estado_impuesto = "respaldo"
+        fuente_impuesto = sii_impuesto_url(anio)
+
+    if current:
+        afp_respaldo = actual.get("afp", AFP_FALLBACK)
+        afp, estado_afp, fuente_afp = obtener_afp_actuales(afp_respaldo)
+    else:
+        afp, fuente_afp = manual_afp(periodo)
+        estado_afp = "manual"
+
+    estado_actualizacion = {
+        "utm": estado_utm,
+        "uf": estado_uf,
+        "impuestoUnico": estado_impuesto,
+        "afp": estado_afp,
+        "topes": "manual",
+        "imm": "manual",
+        "salud": "ok",
+        "cesantia": "manual"
+    }
+    estado_periodo = calcular_estado_periodo(current, estado_actualizacion)
+
+    return {
+        "version": periodo if not current else hoy.isoformat(),
+        "fechaActualizacion": hoy.isoformat() if current else fecha_uf.isoformat(),
+        "periodo": {"anio": anio, "mes": mes, "mesNombre": MESES[mes]},
+        "utm": utm,
+        "uf": round(float(uf), 2) if uf is not None else None,
+        "ufFecha": fecha_uf.isoformat(),
+        "ufPolitica": "valor_dia_actual" if current else "cierre_mes",
+        "topes": topes,
+        "laboral": laboral,
+        "afp": afp,
+        "salud": {"fonasa": 0.07},
+        "cesantia": cesantia,
+        "impuestoUnico": {"tramos": tramos},
+        "estadoPeriodo": estado_periodo,
+        "estadoActualizacion": estado_actualizacion,
+        "fuentes": {
+            "utm": fuente_utm,
+            "uf": fuente_uf,
+            "impuestoUnico": fuente_impuesto,
+            "afp": fuente_afp,
+            "topes": fuente_topes if fuente_topes.startswith("http") else FUENTE_TOPES_MANUAL,
+            "imm": fuente_laboral if fuente_laboral.startswith("http") else FUENTE_LABORAL_MANUAL,
+            "salud": "cotizacion_legal_7_por_ciento",
+            "cesantia": fuente_cesantia if fuente_cesantia.startswith("http") else FUENTE_CESANTIA_MANUAL
+        }
+    }
+
+
+def update_index():
+    periodos = []
+    for path in sorted(PERIODOS_DIR.glob("*/*.json")):
+        data = read_json(path, {}) or {}
+        periodo = path.stem
+        estado = data.get("estadoPeriodo") or "manual_requerido"
+        periodos.append({
+            "periodo": periodo,
+            "estado": estado,
+            "path": str(path.relative_to(ROOT)).replace("\\", "/")
+        })
+
+    desde = periodos[0]["periodo"] if periodos else None
+    hasta = periodos[-1]["periodo"] if periodos else None
+    index = {
+        "desde": desde,
+        "hasta": hasta,
+        "fechaActualizacion": chile_today().isoformat(),
+        "periodos": periodos
+    }
+    write_json(INDEX_PATH, index)
+    return index
+
 
 def enviar_alerta_telegram(mensaje):
     token = os.getenv("TELEGRAM_BOT_TOKEN")
     chat_id = os.getenv("TELEGRAM_CHAT_ID")
-
     if not token or not chat_id:
-        print("Telegram no configurado. No se envió alerta.")
+        print("Telegram no configurado. No se envio alerta.")
         return
-
     try:
         url = f"https://api.telegram.org/bot{token}/sendMessage"
-        response = requests.post(
-            url,
-            data={
-                "chat_id": chat_id,
-                "text": mensaje
-            },
-            timeout=20
-        )
-
+        response = requests.post(url, data={"chat_id": chat_id, "text": mensaje}, timeout=20)
         print("Telegram response:", response.status_code, response.text)
         response.raise_for_status()
-
-        print("Alerta enviada por Telegram.")
     except Exception as e:
         print(f"No se pudo enviar alerta por Telegram: {e}")
-        
-def crear_json():
-    hoy = datetime.now(ZoneInfo("America/Santiago")).date()
-    anio = hoy.year
-    mes = hoy.month
 
-    actual = cargar_json_actual()
-    afp_respaldo = actual.get("afp", AFP_FALLBACK)
 
-    estado_utm = "online"
-    estado_impuesto = "online"
-    estado_uf = "online"
+def valor_usado(data, indicador):
+    if indicador == "uf":
+        return data.get("uf")
+    if indicador == "utm":
+        return data.get("utm")
+    if indicador == "impuestoUnico":
+        return "tabla de tramos" if data.get("impuestoUnico", {}).get("tramos") else "sin tramos"
+    if indicador == "afp":
+        return f"{len(data.get('afp', []))} AFP cargadas"
+    if indicador == "topes":
+        return data.get("topes")
+    if indicador == "imm":
+        return data.get("laboral")
+    if indicador == "salud":
+        return data.get("salud")
+    if indicador == "cesantia":
+        return data.get("cesantia")
+    return data.get(indicador, "sin valor")
 
-    uf, estado_uf, uf_url = obtener_uf_blindada(anio, mes, hoy.day, actual)
-    
-    topes = actual.get("topes", TOPES_FALLBACK)
 
-    utm, estado_utm, utm_url = obtener_utm_blindada(anio, mes, actual)
+def alerta_requerida(indicador, estado):
+    if estado in REQUIRED_STATES or estado == "respaldo":
+        return True
+    return estado == "manual" and indicador in ALERT_MANUAL_KEYS
 
-    try:
-        tramos = obtener_tramos_impuesto_actual(anio, mes, utm)
-        impuesto_url = sii_impuesto_url(anio)
-    except Exception as e:
-        print(f"No se pudo actualizar tabla de impuesto desde SII: {e}")
-        tramos = actual.get("impuestoUnico", {}).get("tramos", TRAMOS_UTM_FALLBACK)
-        impuesto_url = sii_impuesto_url(anio)
-        estado_impuesto = "respaldo"
 
-    afp, estado_afp = obtener_afp_actuales(afp_respaldo)
+def alertas_snapshot(data):
+    alertas = []
+    periodo = period_key(data["periodo"]["anio"], data["periodo"]["mes"])
+    for indicador, estado in data.get("estadoActualizacion", {}).items():
+        if alerta_requerida(indicador, estado):
+            fuente = data.get("fuentes", {}).get(indicador, "sin_fuente")
+            alertas.append(
+                "⚠️ Sueldo Real Chile - dato historico incompleto\n"
+                f"Periodo: {periodo}\n"
+                f"Indicador: {indicador}\n"
+                f"Estado: {estado}\n"
+                f"Valor usado: {valor_usado(data, indicador)}\n"
+                f"Fuente revisada: {fuente}\n"
+                "Accion sugerida: revisar y completar manualmente"
+            )
+    return alertas
 
-    data = {
-        "version": hoy.strftime("%Y-%m-%d"),
-        "fechaActualizacion": hoy.isoformat(),
-        "periodo": {
-            "anio": anio,
-            "mes": mes,
-            "mesNombre": MESES[mes]
-        },
-        "utm": utm,
-        "uf": uf,
-        "topes": topes,
-        "afp": afp,
-        "salud": {
-            "fonasa": 0.07
-        },
-        "cesantia": {
-            "trabajadorIndefinido": 0.006
-        },
-        "impuestoUnico": {
-            "tramos": tramos
-        },
-        "estadoActualizacion": {
-            "utm": estado_utm,
-            "uf": estado_uf,
-            "impuestoUnico": estado_impuesto,
-            "afp": estado_afp
-        },
-        "fuentes": {
-            "utm": utm_url,
-            "uf": uf_url,
-            "impuestoUnico": impuesto_url,
-            "afp": AFP_URL
-        }
-    }
 
-    with open("tasas.json", "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+def update_current():
+    hoy = chile_today()
+    data = build_snapshot(hoy.year, hoy.month, current=True)
+    write_json(TASAS_JSON, data)
+    write_json(period_path(hoy.year, hoy.month), data)
+    cargar_o_actualizar_uf_anual(hoy.year, hasta=hoy)
+    index = update_index()
+
+    alertas = alertas_snapshot(data)
+    if alertas:
+        enviar_alerta_telegram("\n\n".join(alertas))
+    else:
+        enviar_alerta_telegram(
+            "✅ Sueldo Real Chile\n"
+            "Actualizacion completada correctamente.\n"
+            "Todas las fuentes automaticas requeridas se actualizaron online.\n\n"
+            f"Fecha: {hoy.isoformat()}\n"
+            f"UF: {data['uf']} ({data['estadoActualizacion']['uf']})\n"
+            f"UTM: {data['utm']} ({data['estadoActualizacion']['utm']})\n"
+            f"Periodos historicos: {len(index.get('periodos', []))}"
+        )
 
     print("tasas.json actualizado correctamente")
-    print(f"Periodo: {MESES[mes]} {anio}")
-    print(f"UTM: {utm} ({estado_utm})")
-    print(f"UF: {uf} ({estado_uf})")
-    print(f"Topes: {topes}")
-    print(f"Impuesto único: {estado_impuesto}")
-    print(f"AFP: {estado_afp}")
-    print(f"AFP data: {afp}")
+    print(f"Periodo: {MESES[hoy.month]} {hoy.year}")
+    print(f"UF: {data['uf']} ({data['estadoActualizacion']['uf']})")
+    print(f"UTM: {data['utm']} ({data['estadoActualizacion']['utm']})")
+    print(f"Estado periodo vigente: {data['estadoPeriodo']}")
+    print(f"Historicos indexados: {len(index.get('periodos', []))}")
 
-    respaldos = []
 
-    if estado_uf == "respaldo":
-        respaldos.append({
-            "nombre": "UF",
-            "valor": uf,
-            "fuente": sii_uf_url(anio)
-        })
-    
-    if estado_utm == "respaldo":
-        respaldos.append({
-            "nombre": "UTM",
-            "valor": utm,
-            "fuente": sii_utm_url(anio)
-        })
-    
-    if estado_impuesto == "respaldo":
-        respaldos.append({
-            "nombre": "Impuesto único",
-            "valor": "Tabla de tramos guardada en tasas.json",
-            "fuente": sii_impuesto_url(anio)
-        })
-    
-    if estado_afp == "respaldo":
-        respaldos.append({
-            "nombre": "AFP",
-            "valor": afp,
-            "fuente": AFP_URL
-        })
-    
-    if respaldos:
-        mensaje = (
-            "⚠️ Sueldo Real Chile\n"
-            "Se usó respaldo en:\n\n"
-        )
-    
-        for item in respaldos:
-            mensaje += (
-                f"• {item['nombre']}\n"
-                f"  Valor usado: {item['valor']}\n"
-                f"  Revisar fuente: {item['fuente']}\n\n"
-            )
-    
-        mensaje += (
-            f"Fecha: {hoy.isoformat()}\n"
-            "Revisar si la fuente cambió o si corresponde actualizar manualmente."
-        )
-    
+def update_uf_daily():
+    hoy = chile_today()
+    uf_data, estado = cargar_o_actualizar_uf_anual(hoy.year, hasta=hoy)
+    print(f"UF diaria {hoy.year}: {len(uf_data.get('valores', {}))} dias cargados ({estado})")
+
+
+def rebuild_history(from_period, to_period=None, force=False):
+    ensure_manual_files()
+    hoy = chile_today()
+    to_period = to_period or period_key(hoy.year, hoy.month)
+    uf_cache = {}
+
+    for anio, _mes in month_iter(from_period, to_period):
+        if anio not in uf_cache:
+            hasta = hoy if anio == hoy.year else date(anio, 12, 31)
+            uf_cache[anio] = cargar_o_actualizar_uf_anual(anio, hasta=hasta)[0].get("valores", {})
+
+    creados = []
+    omitidos = []
+    for anio, mes in month_iter(from_period, to_period):
+        path = period_path(anio, mes)
+        existing = read_json(path, None)
+        if existing and existing.get("estadoPeriodo") == "cerrado" and not force:
+            omitidos.append(period_key(anio, mes))
+            continue
+
+        current = (anio, mes) == (hoy.year, hoy.month)
+        data = build_snapshot(anio, mes, current=current, uf_values=uf_cache.get(anio, {}))
+        write_json(path, data)
+        creados.append(period_key(anio, mes))
+
+    index = update_index()
+    print(f"Historicos creados/actualizados: {', '.join(creados) if creados else 'ninguno'}")
+    print(f"Historicos omitidos: {', '.join(omitidos) if omitidos else 'ninguno'}")
+    print(f"Periodos disponibles: {len(index.get('periodos', []))}")
+
+
+def validate_snapshot(data):
+    errores = []
+    required = [
+        "version", "fechaActualizacion", "periodo", "utm", "uf", "topes",
+        "laboral", "afp", "salud", "cesantia", "impuestoUnico",
+        "estadoActualizacion", "fuentes"
+    ]
+    for field in required:
+        if field not in data:
+            errores.append(f"Falta campo {field}")
+
+    uf = data.get("uf")
+    utm = data.get("utm")
+    if not validar_uf(uf):
+        errores.append(f"UF fuera de rango: {uf}")
+    if not validar_utm(utm):
+        errores.append(f"UTM fuera de rango: {utm}")
+    if data.get("salud", {}).get("fonasa") != 0.07:
+        errores.append("Fonasa debe ser 0.07")
+    laboral = data.get("laboral", {})
+    if laboral.get("imm", 0) <= 0:
+        errores.append("IMM debe ser mayor que 0")
+    afps = data.get("afp", [])
+    if not afps:
+        errores.append("AFP no puede estar vacio")
+    for afp in afps:
+        comision = afp.get("comision")
+        if comision is None or comision < 0 or comision > 0.03:
+            errores.append(f"Comision AFP fuera de rango: {afp}")
+    tramos = data.get("impuestoUnico", {}).get("tramos", [])
+    if not tramos:
+        errores.append("Tramos de impuesto no pueden estar vacios")
+    return errores
+
+
+def validate_history():
+    errores_totales = []
+    resumen = {"cerrado": [], "vigente": [], "incompleto": [], "manual_requerido": []}
+    otros = []
+
+    for path in sorted(PERIODOS_DIR.glob("*/*.json")):
+        data = read_json(path, {}) or {}
+        periodo = path.stem
+        estado = data.get("estadoPeriodo") or "manual_requerido"
+        if estado in resumen:
+            resumen[estado].append(periodo)
+        else:
+            otros.append((periodo, estado))
+
+        errores = validate_snapshot(data)
+        if errores:
+            errores_totales.append((path, errores))
+
+    print("Resumen de validacion historica:")
+    for estado in ("cerrado", "vigente", "incompleto", "manual_requerido"):
+        periodos = resumen[estado]
+        print(f"- {estado}: {len(periodos)} ({', '.join(periodos) if periodos else 'ninguno'})")
+    if otros:
+        print("- estados no reconocidos:")
+        for periodo, estado in otros:
+            print(f"  * {periodo}: {estado}")
+
+    incompletos = resumen["incompleto"] + resumen["manual_requerido"]
+    if incompletos:
+        print("Periodos que requieren revision antes de cerrarse:")
+        for periodo in incompletos:
+            path = period_path(*parse_period(periodo))
+            data = read_json(path, {}) or {}
+            estados = data.get("estadoActualizacion", {})
+            pendientes = [f"{k}={v}" for k, v in estados.items() if v not in OK_STATES]
+            print(f"- {periodo}: {', '.join(pendientes) if pendientes else 'sin detalle'}")
+
+    if errores_totales:
+        print("Errores de validacion historica:")
+        for path, errores in errores_totales:
+            print(f"- {path.relative_to(ROOT)}")
+            for error in errores:
+                print(f"  * {error}")
+        raise SystemExit(1)
+
+    print("Historicos validados correctamente en estructura y rangos basicos")
+    print(f"Archivos mensuales: {len(list(PERIODOS_DIR.glob('*/*.json')))}")
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Actualiza tasas vigentes e historicas de Sueldo Real Chile")
+    subparsers = parser.add_subparsers(dest="command")
+    subparsers.add_parser("update-current")
+    subparsers.add_parser("update-uf-daily")
+    rebuild = subparsers.add_parser("rebuild-history")
+    rebuild.add_argument("--from", dest="from_period", default="2026-01")
+    rebuild.add_argument("--to", dest="to_period", default=None)
+    rebuild.add_argument("--force", action="store_true")
+    subparsers.add_parser("validate-history")
+
+    args = parser.parse_args()
+    command = args.command or "update-current"
+
+    if command == "update-current":
+        update_current()
+    elif command == "update-uf-daily":
+        update_uf_daily()
+    elif command == "rebuild-history":
+        rebuild_history(args.from_period, args.to_period, args.force)
+    elif command == "validate-history":
+        validate_history()
     else:
-        mensaje = (
-            "✅ Sueldo Real Chile\n"
-            "Actualización completada correctamente.\n"
-            "Todas las fuentes se actualizaron online.\n\n"
-            f"Fecha: {hoy.isoformat()}\n"
-            f"UF: {uf} ({estado_uf})\n"
-            f"UTM: {utm} ({estado_utm})\n"
-            f"Impuesto único: {estado_impuesto}\n"
-            f"AFP: {estado_afp}"
-        )
-    
-    enviar_alerta_telegram(mensaje)
-    
+        parser.error(f"Comando no soportado: {command}")
 
 
 if __name__ == "__main__":
-    crear_json()
+    main()

@@ -1,0 +1,11 @@
+{
+  "cesantia": [
+    {
+      "desde": "2026-01",
+      "hasta": null,
+      "trabajadorIndefinido": 0.006,
+      "trabajadorPlazoFijo": 0.0,
+      "fuente": "manual"
+    }
+  ]
+}
