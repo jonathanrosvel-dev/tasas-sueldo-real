@@ -1,26 +1,26 @@
 {
   "desde": "2026-01",
   "hasta": "2026-05",
-  "fechaActualizacion": "2026-05-24",
+  "fechaActualizacion": "2026-05-26",
   "periodos": [
     {
       "periodo": "2026-01",
-      "estado": "incompleto",
+      "estado": "cerrado",
       "path": "tasas/historico/periodos/2026/2026-01.json"
     },
     {
       "periodo": "2026-02",
-      "estado": "incompleto",
+      "estado": "cerrado",
       "path": "tasas/historico/periodos/2026/2026-02.json"
     },
     {
       "periodo": "2026-03",
-      "estado": "incompleto",
+      "estado": "cerrado",
       "path": "tasas/historico/periodos/2026/2026-03.json"
     },
     {
       "periodo": "2026-04",
-      "estado": "incompleto",
+      "estado": "cerrado",
       "path": "tasas/historico/periodos/2026/2026-04.json"
     },
     {
