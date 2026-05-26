@@ -1,12 +1,13 @@
 {
-  "topes": [
+  "vigencias": [
     {
-      "desde": "2026-01",
+      "desde": "2026-01-01",
       "hasta": null,
       "afpSaludUf": 90.0,
       "cesantiaUf": 135.2,
-      "fuente": "manual_respaldo",
-      "nota": "Verificar contra resoluciones oficiales de la Superintendencia de Pensiones para reconstrucciones historicas."
+      "estado": "manual_validado",
+      "fuente": "manual",
+      "nota": "Dato ingresado manualmente y validado para pruebas beta"
     }
   ]
 }

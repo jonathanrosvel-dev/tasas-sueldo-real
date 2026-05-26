@@ -1,11 +1,13 @@
 {
-  "cesantia": [
+  "vigencias": [
     {
-      "desde": "2026-01",
+      "desde": "2026-01-01",
       "hasta": null,
       "trabajadorIndefinido": 0.006,
       "trabajadorPlazoFijo": 0.0,
-      "fuente": "manual"
+      "estado": "manual_validado",
+      "fuente": "manual",
+      "nota": "Tasas ingresadas manualmente y validadas para pruebas beta"
     }
   ]
 }

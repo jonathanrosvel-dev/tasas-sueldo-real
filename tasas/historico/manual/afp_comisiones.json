@@ -1,11 +1,12 @@
 {
-  "afp": [
+  "vigencias": [
     {
-      "desde": "2026-01",
+      "desde": "2026-01-01",
       "hasta": null,
-      "fuente": "manual_respaldo",
-      "nota": "Respaldo manual usado solo si no hay fuente historica automatica confiable.",
-      "comisiones": [
+      "estado": "manual_validado",
+      "fuente": "manual",
+      "nota": "Dato ingresado manualmente y validado para pruebas beta",
+      "afp": [
         { "nombre": "Capital", "comision": 0.0144 },
         { "nombre": "Cuprum", "comision": 0.0144 },
         { "nombre": "Habitat", "comision": 0.0127 },
