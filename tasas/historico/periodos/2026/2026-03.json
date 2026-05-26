@@ -46,15 +46,16 @@
       { "desdeUtm": 310, "hastaUtm": null, "factor": 0.4, "rebajaUtm": 38.82 }
     ]
   },
-  "estadoPeriodo": "incompleto",
+  "estadoPeriodo": "cerrado",
   "estadoActualizacion": {
     "utm": "online",
     "uf": "online_sii",
     "impuestoUnico": "online",
-    "afp": "manual",
-    "topes": "manual",
-    "imm": "manual",
-    "cesantia": "manual"
+    "afp": "manual_validado",
+    "topes": "manual_validado",
+    "imm": "manual_validado",
+    "salud": "ok",
+    "cesantia": "manual_validado"
   },
   "fuentes": {
     "utm": "https://www.sii.cl/valores_y_fechas/utm/utm2026.htm",
@@ -63,6 +64,7 @@
     "afp": "tasas/historico/manual/afp_comisiones.json",
     "topes": "tasas/historico/manual/topes.json",
     "imm": "tasas/historico/manual/laboral.json",
+    "salud": "cotizacion_legal_7_por_ciento",
     "cesantia": "tasas/historico/manual/cesantia.json"
   }
 }
