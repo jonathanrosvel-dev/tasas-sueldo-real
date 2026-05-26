@@ -61,8 +61,8 @@ UF_MAX = 60000
 UTM_MIN = 50000
 UTM_MAX = 100000
 
-OK_STATES = {"online", "online_sii", "online_mindicador", "ok", "validado"}
-INCOMPLETE_STATES = {"manual", "respaldo"}
+OK_STATES = {"online", "online_sii", "online_mindicador", "ok", "validado", "manual_validado"}
+INCOMPLETE_STATES = {"manual", "manual_pendiente", "respaldo"}
 REQUIRED_STATES = {"manual_requerido", "faltante", "error", "invalido"}
 ESSENTIAL_STATUS_KEYS = (
     "uf",
@@ -74,52 +74,58 @@ ESSENTIAL_STATUS_KEYS = (
     "salud",
     "cesantia",
 )
-ALERT_MANUAL_KEYS = {"afp", "topes"}
+ALERT_STATES = {"manual_pendiente", "respaldo", "manual_requerido", "faltante", "error", "invalido"}
 UF_VALUE_RE = r"\d{1,3}(?:\.\d{3})*,\d{2}"
 
 DEFAULT_MANUAL_FILES = {
     "laboral.json": {
-        "imm": [
+        "vigencias": [
             {
-                "desde": "2026-01",
+                "desde": "2026-01-01",
                 "hasta": None,
-                "valor": 539000,
+                "imm": 539000,
                 "fechaVigencia": "2026-01-01",
-                "fuente": "manual"
+                "estado": "manual_validado",
+                "fuente": "manual",
+                "nota": "IMM ingresado manualmente y validado para pruebas beta"
             }
         ]
     },
     "cesantia.json": {
-        "cesantia": [
+        "vigencias": [
             {
-                "desde": "2026-01",
+                "desde": "2026-01-01",
                 "hasta": None,
                 "trabajadorIndefinido": 0.006,
                 "trabajadorPlazoFijo": 0.0,
-                "fuente": "manual"
+                "estado": "manual_validado",
+                "fuente": "manual",
+                "nota": "Tasas ingresadas manualmente y validadas para pruebas beta"
             }
         ]
     },
     "topes.json": {
-        "topes": [
+        "vigencias": [
             {
-                "desde": "2026-01",
+                "desde": "2026-01-01",
                 "hasta": None,
                 "afpSaludUf": 90.0,
                 "cesantiaUf": 135.2,
-                "fuente": "manual_respaldo",
-                "nota": "Verificar contra resoluciones oficiales de la Superintendencia de Pensiones para reconstrucciones historicas."
+                "estado": "manual_validado",
+                "fuente": "manual",
+                "nota": "Dato ingresado manualmente y validado para pruebas beta"
             }
         ]
     },
     "afp_comisiones.json": {
-        "afp": [
+        "vigencias": [
             {
-                "desde": "2026-01",
+                "desde": "2026-01-01",
                 "hasta": None,
-                "fuente": "manual_respaldo",
-                "nota": "Respaldo manual usado solo si no hay fuente historica automatica confiable.",
-                "comisiones": AFP_FALLBACK
+                "estado": "manual_validado",
+                "fuente": "manual",
+                "nota": "Dato ingresado manualmente y validado para pruebas beta",
+                "afp": AFP_FALLBACK
             }
         ]
     }
@@ -271,46 +277,97 @@ def month_iter(start_period, end_period):
             anio += 1
 
 
-def resolve_vigencia(items, periodo):
+def normalizar_fecha(valor, fin_periodo=False):
+    if valor is None:
+        return None
+    if isinstance(valor, date):
+        return valor
+    if re.fullmatch(r"\d{4}-\d{2}-\d{2}", valor):
+        return date.fromisoformat(valor)
+    if re.fullmatch(r"\d{4}-\d{2}", valor):
+        anio, mes = parse_period(valor)
+        dia = last_day(anio, mes) if fin_periodo else 1
+        return date(anio, mes, dia)
+    raise ValueError(f"Fecha o periodo invalido: {valor}")
+
+
+def vigencias_de(data, *legacy_keys):
+    if data.get("vigencias"):
+        return data["vigencias"]
+    for key in legacy_keys:
+        if data.get(key):
+            return data[key]
+    return []
+
+
+def estado_manual(item):
+    estado = item.get("estado")
+    if estado:
+        return estado
+    fuente = item.get("fuente", "")
+    if "respaldo" in fuente:
+        return "respaldo"
+    return "manual_pendiente"
+
+
+def resolve_vigencia(items, fecha_referencia):
+    fecha_referencia = normalizar_fecha(fecha_referencia)
     candidatos = []
     for item in items:
-        desde = item.get("desde", "0000-00")
-        hasta = item.get("hasta")
-        if desde <= periodo and (hasta is None or periodo <= hasta):
+        desde = normalizar_fecha(item.get("desde", "0000-01-01"))
+        hasta = normalizar_fecha(item.get("hasta"), fin_periodo=True)
+        if desde <= fecha_referencia and (hasta is None or fecha_referencia <= hasta):
             candidatos.append(item)
     if not candidatos:
-        raise RuntimeError(f"No hay vigencia manual para {periodo}")
-    return sorted(candidatos, key=lambda x: x.get("desde", ""))[-1]
+        raise RuntimeError(f"No hay vigencia manual para {fecha_referencia.isoformat()}")
+    return sorted(candidatos, key=lambda x: normalizar_fecha(x.get("desde", "0000-01-01")))[-1]
 
 
-def manual_laboral(periodo):
+def manual_laboral(fecha_referencia):
     data = read_json(MANUAL_DIR / "laboral.json", DEFAULT_MANUAL_FILES["laboral.json"])
-    item = resolve_vigencia(data.get("imm", []), periodo)
-    return {"imm": item["valor"], "fechaImm": item.get("fechaVigencia")}, item.get("fuente", FUENTE_LABORAL_MANUAL)
+    item = resolve_vigencia(vigencias_de(data, "imm"), fecha_referencia)
+    valor = item.get("imm", item.get("valor"))
+    return (
+        {"imm": valor, "fechaImm": item.get("fechaVigencia", item.get("desde"))},
+        item.get("fuente", FUENTE_LABORAL_MANUAL),
+        estado_manual(item)
+    )
 
 
-def manual_cesantia(periodo):
+def manual_cesantia(fecha_referencia):
     data = read_json(MANUAL_DIR / "cesantia.json", DEFAULT_MANUAL_FILES["cesantia.json"])
-    item = resolve_vigencia(data.get("cesantia", []), periodo)
-    return {
-        "trabajadorIndefinido": item["trabajadorIndefinido"],
-        "trabajadorPlazoFijo": item.get("trabajadorPlazoFijo", 0.0)
-    }, item.get("fuente", FUENTE_CESANTIA_MANUAL)
+    item = resolve_vigencia(vigencias_de(data, "cesantia"), fecha_referencia)
+    return (
+        {
+            "trabajadorIndefinido": item["trabajadorIndefinido"],
+            "trabajadorPlazoFijo": item.get("trabajadorPlazoFijo", 0.0)
+        },
+        item.get("fuente", FUENTE_CESANTIA_MANUAL),
+        estado_manual(item)
+    )
 
 
-def manual_topes(periodo):
+def manual_topes(fecha_referencia):
     data = read_json(MANUAL_DIR / "topes.json", DEFAULT_MANUAL_FILES["topes.json"])
-    item = resolve_vigencia(data.get("topes", []), periodo)
-    return {
-        "afpSaludUf": item["afpSaludUf"],
-        "cesantiaUf": item["cesantiaUf"]
-    }, item.get("fuente", FUENTE_TOPES_MANUAL)
+    item = resolve_vigencia(vigencias_de(data, "topes"), fecha_referencia)
+    return (
+        {
+            "afpSaludUf": item["afpSaludUf"],
+            "cesantiaUf": item["cesantiaUf"]
+        },
+        item.get("fuente", FUENTE_TOPES_MANUAL),
+        estado_manual(item)
+    )
 
 
-def manual_afp(periodo):
+def manual_afp(fecha_referencia):
     data = read_json(MANUAL_DIR / "afp_comisiones.json", DEFAULT_MANUAL_FILES["afp_comisiones.json"])
-    item = resolve_vigencia(data.get("afp", []), periodo)
-    return item.get("comisiones", AFP_FALLBACK), item.get("fuente", FUENTE_AFP_MANUAL)
+    item = resolve_vigencia(vigencias_de(data, "afp"), fecha_referencia)
+    return (
+        item.get("afp", item.get("comisiones", AFP_FALLBACK)),
+        item.get("fuente", FUENTE_AFP_MANUAL),
+        estado_manual(item)
+    )
 
 
 def agregar_uf_valor(valores, anio, mes, dia, valor_texto):
@@ -339,8 +396,7 @@ def parsear_uf_tablas_por_mes(soup, anio):
             continue
         for fila in tabla.find_all("tr"):
             celdas = [normalizar(c.get_text(" ", strip=True)) for c in fila.find_all(["td", "th"])]
-            texto = " ".join(celdas)
-            extraer_pares_dia_uf_desde_texto(texto, anio, mes, valores)
+            extraer_pares_dia_uf_desde_texto(" ".join(celdas), anio, mes, valores)
     return valores
 
 
@@ -356,9 +412,8 @@ def parsear_uf_texto_por_mes(soup, anio):
         if lower.startswith("dia ") or lower.startswith("día "):
             mes_actual = None
             continue
-        if not mes_actual:
-            continue
-        extraer_pares_dia_uf_desde_texto(line, anio, mes_actual, valores)
+        if mes_actual:
+            extraer_pares_dia_uf_desde_texto(line, anio, mes_actual, valores)
     return valores
 
 
@@ -427,16 +482,13 @@ def cargar_o_actualizar_uf_anual(anio, hasta=None):
     except Exception as e:
         print(f"No se pudo actualizar UF diaria desde SII: {e}")
         estado = "respaldo" if valores else "manual_requerido"
-        if anio == hoy.year and hoy <= hasta:
-            if hoy.isoformat() in valores:
+        if anio == hoy.year and hoy <= hasta and hoy.isoformat() not in valores:
+            try:
+                valores[hoy.isoformat()] = round(obtener_uf_mindicador(), 2)
                 estado = "respaldo"
-            else:
-                try:
-                    valores[hoy.isoformat()] = round(obtener_uf_mindicador(), 2)
-                    estado = "respaldo"
-                except Exception as fallback_error:
-                    print(f"No se pudo agregar UF actual como respaldo parcial: {fallback_error}")
-                    estado = "respaldo" if valores else "manual_requerido"
+            except Exception as fallback_error:
+                print(f"No se pudo agregar UF actual como respaldo parcial: {fallback_error}")
+                estado = "respaldo" if valores else "manual_requerido"
 
     data = {
         "anio": anio,
@@ -481,8 +533,7 @@ def buscar_tabla_impuesto_mes(soup, mes_nombre, anio):
             tabla = tag.find_next("table")
             if tabla:
                 return tabla
-    texto_completo = soup.get_text(" ", strip=True).lower()
-    if titulo_buscado not in texto_completo:
+    if titulo_buscado not in soup.get_text(" ", strip=True).lower():
         raise RuntimeError(f"No se encontro el titulo {mes_nombre} {anio}")
     tabla = soup.find("table")
     if not tabla:
@@ -610,31 +661,31 @@ def calcular_estado_periodo(current, estado_actualizacion):
     estados = [estado_actualizacion.get(k) for k in ESSENTIAL_STATUS_KEYS]
     if any(not estado or estado in REQUIRED_STATES for estado in estados):
         return "manual_requerido"
-    if all(estado in OK_STATES for estado in estados):
-        return "cerrado"
     if any(estado in INCOMPLETE_STATES for estado in estados):
         return "incompleto"
+    if all(estado in OK_STATES for estado in estados):
+        return "cerrado"
     return "incompleto"
 
 
-def build_snapshot(anio, mes, current=False, uf_values=None):
+def build_snapshot(anio, mes, current=False, uf_values=None, fecha_calculo=None):
     ensure_manual_files()
     actual = cargar_json_actual()
     periodo = period_key(anio, mes)
     hoy = chile_today()
     cierre = date(anio, mes, last_day(anio, mes))
-    fecha_uf = hoy if current else cierre
-    if fecha_uf > hoy:
-        fecha_uf = hoy
+    fecha_referencia = fecha_calculo or (hoy if current else cierre)
+    if fecha_referencia > hoy:
+        fecha_referencia = hoy
 
     if uf_values is None:
-        uf_data, estado_uf_file = cargar_o_actualizar_uf_anual(anio, hasta=fecha_uf)
+        uf_data, estado_uf_file = cargar_o_actualizar_uf_anual(anio, hasta=fecha_referencia)
         uf_values = uf_data.get("valores", {})
     else:
         estado_uf_file = "online_sii"
 
-    uf = uf_values.get(fecha_uf.isoformat())
-    estado_uf = estado_uf_file if uf else estado_uf_file
+    uf = uf_values.get(fecha_referencia.isoformat())
+    estado_uf = estado_uf_file
     fuente_uf = sii_uf_url(anio) if uf and estado_uf_file == "online_sii" else "respaldo_local"
 
     if not uf:
@@ -650,9 +701,9 @@ def build_snapshot(anio, mes, current=False, uf_values=None):
             estado_uf = "respaldo" if validar_uf(uf) else "manual_requerido"
             fuente_uf = "respaldo_local"
 
-    topes, fuente_topes = manual_topes(periodo)
-    laboral, fuente_laboral = manual_laboral(periodo)
-    cesantia, fuente_cesantia = manual_cesantia(periodo)
+    topes, fuente_topes, estado_topes = manual_topes(fecha_referencia)
+    laboral, fuente_laboral, estado_laboral = manual_laboral(fecha_referencia)
+    cesantia, fuente_cesantia, estado_cesantia = manual_cesantia(fecha_referencia)
 
     utm, estado_utm, fuente_utm = obtener_utm_blindada(anio, mes, actual)
 
@@ -670,29 +721,28 @@ def build_snapshot(anio, mes, current=False, uf_values=None):
         afp_respaldo = actual.get("afp", AFP_FALLBACK)
         afp, estado_afp, fuente_afp = obtener_afp_actuales(afp_respaldo)
     else:
-        afp, fuente_afp = manual_afp(periodo)
-        estado_afp = "manual"
+        afp, fuente_afp, estado_afp = manual_afp(fecha_referencia)
 
     estado_actualizacion = {
         "utm": estado_utm,
         "uf": estado_uf,
         "impuestoUnico": estado_impuesto,
         "afp": estado_afp,
-        "topes": "manual",
-        "imm": "manual",
+        "topes": estado_topes,
+        "imm": estado_laboral,
         "salud": "ok",
-        "cesantia": "manual"
+        "cesantia": estado_cesantia
     }
     estado_periodo = calcular_estado_periodo(current, estado_actualizacion)
 
     return {
         "version": periodo if not current else hoy.isoformat(),
-        "fechaActualizacion": hoy.isoformat() if current else fecha_uf.isoformat(),
+        "fechaActualizacion": hoy.isoformat() if current else fecha_referencia.isoformat(),
         "periodo": {"anio": anio, "mes": mes, "mesNombre": MESES[mes]},
         "utm": utm,
         "uf": round(float(uf), 2) if uf is not None else None,
-        "ufFecha": fecha_uf.isoformat(),
-        "ufPolitica": "valor_dia_actual" if current else "cierre_mes",
+        "ufFecha": fecha_referencia.isoformat(),
+        "ufPolitica": "valor_dia_actual" if current else "fecha_referencia",
         "topes": topes,
         "laboral": laboral,
         "afp": afp,
@@ -705,7 +755,7 @@ def build_snapshot(anio, mes, current=False, uf_values=None):
             "utm": fuente_utm,
             "uf": fuente_uf,
             "impuestoUnico": fuente_impuesto,
-            "afp": fuente_afp,
+            "afp": fuente_afp if fuente_afp.startswith("http") else FUENTE_AFP_MANUAL,
             "topes": fuente_topes if fuente_topes.startswith("http") else FUENTE_TOPES_MANUAL,
             "imm": fuente_laboral if fuente_laboral.startswith("http") else FUENTE_LABORAL_MANUAL,
             "salud": "cotizacion_legal_7_por_ciento",
@@ -773,10 +823,8 @@ def valor_usado(data, indicador):
     return data.get(indicador, "sin valor")
 
 
-def alerta_requerida(indicador, estado):
-    if estado in REQUIRED_STATES or estado == "respaldo":
-        return True
-    return estado == "manual" and indicador in ALERT_MANUAL_KEYS
+def alerta_requerida(_indicador, estado):
+    return estado in ALERT_STATES
 
 
 def alertas_snapshot(data):
@@ -786,7 +834,7 @@ def alertas_snapshot(data):
         if alerta_requerida(indicador, estado):
             fuente = data.get("fuentes", {}).get(indicador, "sin_fuente")
             alertas.append(
-                "⚠️ Sueldo Real Chile - dato historico incompleto\n"
+                "⚠️ Sueldo Real Chile - dato historico requiere revision\n"
                 f"Periodo: {periodo}\n"
                 f"Indicador: {indicador}\n"
                 f"Estado: {estado}\n"
@@ -812,7 +860,7 @@ def update_current():
         enviar_alerta_telegram(
             "✅ Sueldo Real Chile\n"
             "Actualizacion completada correctamente.\n"
-            "Todas las fuentes automaticas requeridas se actualizaron online.\n\n"
+            "Todas las fuentes requeridas quedaron en estado usable.\n\n"
             f"Fecha: {hoy.isoformat()}\n"
             f"UF: {data['uf']} ({data['estadoActualizacion']['uf']})\n"
             f"UTM: {data['utm']} ({data['estadoActualizacion']['utm']})\n"
@@ -854,7 +902,8 @@ def rebuild_history(from_period, to_period=None, force=False):
             continue
 
         current = (anio, mes) == (hoy.year, hoy.month)
-        data = build_snapshot(anio, mes, current=current, uf_values=uf_cache.get(anio, {}))
+        fecha_ref = hoy if current else date(anio, mes, last_day(anio, mes))
+        data = build_snapshot(anio, mes, current=current, uf_values=uf_cache.get(anio, {}), fecha_calculo=fecha_ref)
         write_json(path, data)
         creados.append(period_key(anio, mes))
 
