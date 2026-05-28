@@ -16,7 +16,7 @@ REPORTES_DIR = ROOT / "tasas" / "historico" / "reportes"
 ZONAS_EXTREMAS_PATH = MANUAL_DIR / "zonas_extremas.json"
 HASHES_PATH = MANUAL_DIR / "zonas_extremas_hashes.json"
 
-FUENTES = [
+FUENTES_BASE = [
     {
         "nombre": "SII Pregunta frecuente DL 889",
         "url": "https://www.sii.cl/preguntas_frecuentes/declaracion_renta/001_140_1533.htm",
@@ -65,9 +65,35 @@ MESES = {
     "diciembre": 12,
 }
 
+ANIO_MINIMO_APP = 2026
+
 
 def chile_today():
     return datetime.now(ZoneInfo("America/Santiago")).date()
+
+
+def fuentes_a_revisar(hoy=None):
+    """Fuentes fijas + páginas SII de renta relevantes para detectar sueldo grado 1-A.
+
+    La página de renta/{anio_tributario}/personas_naturales.html suele contener
+    la tabla del año comercial anterior. Por eso se revisa también el año
+    tributario siguiente cuando corresponda. Si todavía no existe, se ignora sin
+    generar error crítico.
+    """
+    hoy = hoy or chile_today()
+    fuentes = list(FUENTES_BASE)
+    for anio_tributario in sorted({hoy.year, hoy.year + 1}):
+        url = f"https://www.sii.cl/valores_y_fechas/renta/{anio_tributario}/personas_naturales.html"
+        if any(f["url"] == url for f in fuentes):
+            continue
+        fuentes.append({
+            "nombre": f"SII valores y fechas renta {anio_tributario}",
+            "url": url,
+            "tipo": "html",
+            "opcional": True,
+            "uso": "Detección automática de sueldo grado 1-A cuando SII publique nuevo año tributario",
+        })
+    return fuentes
 
 
 def read_json(path, default=None):
@@ -90,6 +116,8 @@ def normalizar_texto(texto):
     texto = unicodedata.normalize("NFKD", texto)
     texto = "".join(ch for ch in texto if not unicodedata.combining(ch))
     texto = texto.lower()
+    texto = texto.replace("º", "o")
+    texto = texto.replace("ª", "a")
     return re.sub(r"\s+", " ", texto).strip()
 
 
@@ -153,23 +181,65 @@ def ultimo_dia_mes(anio, mes):
     return (siguiente.toordinal() - date(anio, mes, 1).toordinal())
 
 
+def extraer_anio_tributario_desde_url(url):
+    match = re.search(r"/renta/(\d{4})/personas_naturales\.html", url or "")
+    return int(match.group(1)) if match else None
+
+
+def extraer_anio_tabla_sueldo(texto_norm, fuente):
+    patrones = [
+        r"meses\s+ano\s+(\d{4})",
+        r"meses\s+del\s+ano\s+(\d{4})",
+        r"ano\s+(\d{4})\s+sueldo\s+grado",
+    ]
+    for patron in patrones:
+        match = re.search(patron, texto_norm)
+        if match:
+            return int(match.group(1))
+
+    anio_tributario = extraer_anio_tributario_desde_url(fuente.get("url"))
+    if anio_tributario:
+        # En las páginas de Renta del SII, el año tributario suele publicar límites del año comercial anterior.
+        return anio_tributario - 1
+    return None
+
+
+def extraer_seccion_sueldo_grado(texto_norm):
+    start = texto_norm.find("sueldo grado")
+    if start < 0:
+        return ""
+    seccion = texto_norm[start:start + 5000]
+    # Cortar antes de la siguiente tabla grande si el texto trae múltiples secciones seguidas.
+    cortes = [
+        "porcentajes que los compradores",
+        "porcentajes que los mineros",
+        "tabla de calculo",
+    ]
+    for corte in cortes:
+        idx = seccion.find(corte, 600)
+        if idx > 0:
+            seccion = seccion[:idx]
+    return seccion
+
+
 def extraer_sueldo_grado_1a(texto, fuente):
     texto_norm = normalizar_texto(texto)
     if "sueldo grado 1-a" not in texto_norm and "sueldo grado 1 a" not in texto_norm:
         return []
 
-    match_anio = re.search(r"meses\s+ano\s+(\d{4})", texto_norm)
-    anio = int(match_anio.group(1)) if match_anio else None
+    anio = extraer_anio_tabla_sueldo(texto_norm, fuente)
     if anio is None:
         # Evita proponer vigencias sin año confiable.
         return []
 
-    start = texto_norm.find("sueldo grado")
-    seccion = texto_norm[start:start + 3000]
-    candidatos = []
+    seccion = extraer_seccion_sueldo_grado(texto_norm)
+    if not seccion:
+        return []
 
+    candidatos = []
     for mes_nombre, mes_numero in MESES.items():
-        patron = rf"{mes_nombre}\s+\$?\s*([0-9]{{1,3}}(?:\.[0-9]{{3}})+|[0-9]{{5,}})"
+        # La página del SII puede venir como "Enero $ 715.858" o con saltos entre mes y valor.
+        patron = rf"\b{mes_nombre}\b\s+(?:\$\s*)?([0-9]{{1,3}}(?:\.[0-9]{{3}})+|[0-9]{{5,}})"
         match = re.search(patron, seccion)
         if not match:
             continue
@@ -182,7 +252,9 @@ def extraer_sueldo_grado_1a(texto, fuente):
             "valor": valor,
             "fuente": fuente["nombre"],
             "url": fuente["url"],
-            "confianza": "alta" if anio >= 2026 else "baja",
+            "anioTabla": anio,
+            "anioTributario": extraer_anio_tributario_desde_url(fuente.get("url")),
+            "confianza": "alta" if anio >= ANIO_MINIMO_APP else "historico_no_usado_app",
         })
 
     return candidatos
@@ -212,7 +284,7 @@ def agregar_sueldos_pendientes(zonas_data, candidatos):
             "estado": "manual_pendiente",
             "fuente": candidato["fuente"],
             "url": candidato["url"],
-            "nota": "Detectado automaticamente por monitoreo DL 889. Requiere validacion humana antes de marcar manual_validado.",
+            "nota": "Detectado automáticamente por monitoreo DL 889 desde SII. Requiere validación humana antes de marcar manual_validado.",
         }
         sueldo_grado.append(nuevo)
         agregados.append(nuevo)
@@ -237,7 +309,7 @@ def enviar_telegram(mensaje):
     token = os.getenv("TELEGRAM_BOT_TOKEN")
     chat_id = os.getenv("TELEGRAM_CHAT_ID")
     if not token or not chat_id:
-        print("Telegram no configurado. No se envio alerta.")
+        print("Telegram no configurado. No se envió alerta.")
         return
     try:
         response = requests.post(
@@ -255,13 +327,13 @@ def mensaje_alerta(reporte):
     cambios = reporte.get("cambiosDetectados", [])
     primer_cambio = cambios[0] if cambios else {}
     fuente = primer_cambio.get("fuente") or "varias fuentes"
-    motivo = primer_cambio.get("motivo") or "hay datos pendientes de validacion"
+    motivo = primer_cambio.get("motivo") or "hay datos pendientes de validación"
     return (
         "⚠️ Sueldo Real Chile - revisar zona extrema DL 889\n"
         f"Fuente modificada: {fuente}\n"
         f"Estado: {reporte['estado']}\n"
         f"Motivo: {motivo}\n"
-        "Accion sugerida: revisar zonas_extremas.json antes de validar nuevos datos"
+        "Acción sugerida: revisar zonas_extremas.json antes de validar nuevos datos"
     )
 
 
@@ -283,7 +355,7 @@ def main():
     cambios = []
     candidatos_sueldo = []
 
-    for fuente in FUENTES:
+    for fuente in fuentes_a_revisar():
         registro = {
             "nombre": fuente["nombre"],
             "url": fuente["url"],
@@ -304,7 +376,7 @@ def main():
                     "fuente": fuente["nombre"],
                     "url": fuente["url"],
                     "motivo": "baseline_creado",
-                    "detalle": "Primera revision registrada para esta fuente.",
+                    "detalle": "Primera revisión registrada para esta fuente.",
                 })
             elif anterior.get("ultimoHash") != contenido_hash:
                 cambios.append({
@@ -342,12 +414,14 @@ def main():
             }
         except Exception as exc:
             registro.update({"estado": "error", "error": str(exc)})
-            cambios.append({
-                "fuente": fuente["nombre"],
-                "url": fuente["url"],
-                "motivo": "fuente_no_disponible",
-                "error": str(exc),
-            })
+            # Las fuentes opcionales futuras pueden no existir todavía; no deben generar ruido diario si devuelven 404.
+            if not fuente.get("opcional"):
+                cambios.append({
+                    "fuente": fuente["nombre"],
+                    "url": fuente["url"],
+                    "motivo": "fuente_no_disponible",
+                    "error": str(exc),
+                })
 
         fuentes_revisadas.append(registro)
 
@@ -372,7 +446,7 @@ def main():
         })
 
     hashes_data["fechaActualizacion"] = hoy
-    hashes_data["fuentes"] = [hashes_por_url[url] for url in sorted(hashes_por_url)]
+    hashes_data["fuentes"] = [hashes_por_url[url] for url in sorted(hashes_por_url) if url]
     write_json(HASHES_PATH, hashes_data)
 
     if nuevos_sueldos:
@@ -396,7 +470,7 @@ def main():
         reporte_path = REPORTES_DIR / f"zonas_extremas_{hoy}.json"
         write_json(reporte_path, reporte)
         enviar_telegram(mensaje_alerta(reporte))
-        print(f"Revision requerida. Reporte: {reporte_path.relative_to(ROOT)}")
+        print(f"Revisión requerida. Reporte: {reporte_path.relative_to(ROOT)}")
     else:
         print("Monitoreo DL 889 sin cambios relevantes.")
 
