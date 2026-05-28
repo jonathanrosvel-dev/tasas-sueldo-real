@@ -5,7 +5,7 @@ ROOT = Path(__file__).resolve().parents[1]
 ZONAS_EXTREMAS_PATH = ROOT / "tasas" / "historico" / "manual" / "zonas_extremas.json"
 HASHES_PATH = ROOT / "tasas" / "historico" / "manual" / "zonas_extremas_hashes.json"
 
-VALID_STATES = {"manual_validado", "manual_pendiente", "manual_requerido"}
+VALID_STATES = {"manual_validado", "manual_pendiente", "manual_requerido", "referencial_pendiente_validacion"}
 
 
 def read_json(path):
@@ -52,7 +52,7 @@ def validate_zonas_extremas(path=ZONAS_EXTREMAS_PATH):
     data = read_json(path)
 
     if data.get("estado") not in VALID_STATES:
-        errores.append("estado raiz debe ser manual_validado, manual_pendiente o manual_requerido")
+        errores.append("estado raiz debe ser manual_validado, manual_pendiente, manual_requerido o referencial_pendiente_validacion")
 
     if not data.get("fuentes"):
         errores.append("fuentes no puede estar vacio")
@@ -70,7 +70,7 @@ def validate_zonas_extremas(path=ZONAS_EXTREMAS_PATH):
             errores.append(f"estado invalido en sueldoGrado1A: {item}")
         if estado == "manual_validado" and not item.get("url"):
             advertencias.append(f"sueldoGrado1A validado sin URL fuente: {item}")
-        if estado in {"manual_pendiente", "manual_requerido"}:
+        if estado in {"manual_pendiente", "manual_requerido", "referencial_pendiente_validacion"}:
             advertencias.append(f"sueldoGrado1A pendiente de validacion: {item.get('desde')} {item.get('valor')}")
 
     zonas = data.get("zonas", [])
@@ -94,8 +94,12 @@ def validate_zonas_extremas(path=ZONAS_EXTREMAS_PATH):
         if porcentaje is not None:
             if not isinstance(porcentaje, (int, float)) or porcentaje < 0:
                 errores.append(f"porcentaje invalido en zona {nombre}: {porcentaje}")
-            if estado != "manual_validado":
-                errores.append(f"zona {nombre} tiene porcentaje pero no esta manual_validado")
+            if estado == "manual_validado" and not zona.get("url"):
+                advertencias.append(f"zona {nombre} validada sin URL fuente")
+            if estado == "referencial_pendiente_validacion":
+                advertencias.append(f"zona referencial pendiente de validacion primaria: {nombre}")
+            if estado not in {"manual_validado", "referencial_pendiente_validacion"}:
+                errores.append(f"zona {nombre} tiene porcentaje pero estado no permite calculo referencial: {estado}")
 
     return errores, advertencias
 
