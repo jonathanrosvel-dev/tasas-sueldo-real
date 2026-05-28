@@ -25,11 +25,15 @@ jobs:
       - name: Instalar dependencias
         run: pip install requests beautifulsoup4
 
-      - name: Ejecutar script
+      - name: Ejecutar actualización de tasas
+        run: python scripts/update_tasas.py update-current
+
+      - name: Enviar resumen humano por Telegram
+        if: always()
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: python scripts/update_tasas.py update-current
+        run: python scripts/send_human_tasas_alerts.py
 
       - name: Verificar cambios
         id: verify-changed-files
