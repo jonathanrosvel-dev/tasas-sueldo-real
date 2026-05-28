@@ -1,0 +1,125 @@
+{
+  "descripcion": "Datos referenciales para rebaja zona extrema DL 889",
+  "estado": "manual_validado",
+  "funcionFutura": true,
+  "noIntegrarEnTasasJson": true,
+  "advertenciaLegal": "Esta base no determina automaticamente el derecho al beneficio. La aplicacion futura debe exigir confirmacion del usuario sobre residencia, lugar de trabajo, renta generada en zona extrema y demas requisitos legales.",
+  "textoPrudenteFuturo": "Esta rebaja es referencial y solo aplica si cumples los requisitos legales de residencia, lugar de trabajo, renta generada en zona extrema y demas condiciones del DL 889. Puede variar segun interpretacion tributaria y antecedentes del empleador.",
+  "fuentes": [
+    {
+      "nombre": "SII Pregunta frecuente DL 889",
+      "url": "https://www.sii.cl/preguntas_frecuentes/declaracion_renta/001_140_1533.htm",
+      "uso": "Requisitos generales y naturaleza de la rebaja"
+    },
+    {
+      "nombre": "SII valores y fechas renta 2026",
+      "url": "https://www.sii.cl/valores_y_fechas/renta/2026/personas_naturales.html",
+      "uso": "Tabla SII de sueldo grado 1-A para rebaja de presuncion de asignacion de zona"
+    },
+    {
+      "nombre": "SII Circular N°2 de 2026",
+      "url": "https://www.sii.cl/normativa_legislacion/circulares/2026/circu2.pdf",
+      "uso": "Respaldo puntual de sueldo grado 1-A informado para febrero 2026"
+    },
+    {
+      "nombre": "SII pregunta frecuente DDJJ 1887 zonas extremas",
+      "url": "https://www.sii.cl/preguntas_frecuentes/ddjj/001_135_0476.htm",
+      "uso": "Referencia de aplicacion de rebaja y tope asociado en DDJJ 1887"
+    }
+  ],
+  "requisitosGenerales": [
+    "Residencia en zona extrema habilitada",
+    "Rentas generadas en la zona correspondiente",
+    "Rentas clasificadas en el articulo 42 de la Ley sobre Impuesto a la Renta",
+    "No gozar de gratificacion de zona del DL 249"
+  ],
+  "criterioUso": {
+    "aplicarAutomaticamente": false,
+    "requiereConfirmacionUsuario": true,
+    "requiereZonaYPorcentajeValidado": true,
+    "aplicarAntesDeImpuestoUnico": true,
+    "nota": "Modulo preparado para calculo referencial futuro; no debe aplicarse sin confirmacion de requisitos legales y porcentaje/tope validado."
+  },
+  "sueldoGrado1A": [
+    {
+      "desde": "2026-02-01",
+      "hasta": "2026-02-28",
+      "valor": 720439,
+      "estado": "manual_validado",
+      "fuente": "SII Circular N°2/2026",
+      "url": "https://www.sii.cl/normativa_legislacion/circulares/2026/circu2.pdf",
+      "nota": "Dato puntual observado para febrero 2026. No extrapolar a otros meses sin nueva fuente."
+    }
+  ],
+  "zonas": [
+    {
+      "nombre": "Region de Tarapaca",
+      "tipo": "region",
+      "region": "Tarapaca",
+      "codigoRegionHistorico": "I",
+      "comunas": [],
+      "porcentaje": null,
+      "estado": "manual_pendiente",
+      "fuente": "pendiente_validacion",
+      "nota": "Completar porcentaje aplicable segun tabla legal validada. No aplicar automaticamente a todos los trabajadores."
+    },
+    {
+      "nombre": "Region de Aysen",
+      "tipo": "region",
+      "region": "Aysen del General Carlos Ibanez del Campo",
+      "codigoRegionHistorico": "XI",
+      "comunas": [],
+      "porcentaje": null,
+      "estado": "manual_pendiente",
+      "fuente": "pendiente_validacion",
+      "nota": "Completar porcentaje aplicable segun tabla legal validada. No aplicar automaticamente a todos los trabajadores."
+    },
+    {
+      "nombre": "Region de Magallanes y de la Antartica Chilena",
+      "tipo": "region",
+      "region": "Magallanes y de la Antartica Chilena",
+      "codigoRegionHistorico": "XII",
+      "comunas": [],
+      "porcentaje": null,
+      "estado": "manual_pendiente",
+      "fuente": "pendiente_validacion",
+      "nota": "Completar porcentaje aplicable segun tabla legal validada. No aplicar automaticamente a todos los trabajadores."
+    },
+    {
+      "nombre": "Region de Arica y Parinacota",
+      "tipo": "region",
+      "region": "Arica y Parinacota",
+      "codigoRegionHistorico": "XV",
+      "comunas": [],
+      "porcentaje": null,
+      "estado": "manual_pendiente",
+      "fuente": "pendiente_validacion",
+      "nota": "Completar porcentaje aplicable segun tabla legal validada. No aplicar automaticamente a todos los trabajadores."
+    },
+    {
+      "nombre": "Provincia de Chiloe",
+      "tipo": "provincia",
+      "region": "Los Lagos",
+      "comunas": [],
+      "porcentaje": null,
+      "estado": "manual_pendiente",
+      "fuente": "pendiente_validacion",
+      "nota": "Completar porcentaje aplicable segun tabla legal validada. No aplicar automaticamente a todos los trabajadores."
+    },
+    {
+      "nombre": "Provincia de Palena",
+      "tipo": "provincia",
+      "region": "Los Lagos",
+      "comunas": [],
+      "porcentaje": null,
+      "estado": "manual_pendiente",
+      "fuente": "pendiente_validacion",
+      "nota": "Completar porcentaje aplicable segun tabla legal validada. No aplicar automaticamente a todos los trabajadores."
+    }
+  ],
+  "automatizacionSugerida": {
+    "estado": "pendiente",
+    "parser": "Buscar en valores_y_fechas/renta/{anio}/personas_naturales.html la seccion 'Sueldo grado 1-A Escala Unica de Sueldos' y extraer valores por mes; complementar con circulares mensuales cuando corresponda.",
+    "noUsarSi": "La tabla disponible corresponde a ano tributario y no al mes calendario de la liquidacion, salvo validacion manual."
+  }
+}
