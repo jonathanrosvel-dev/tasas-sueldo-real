@@ -73,13 +73,7 @@ def chile_today():
 
 
 def fuentes_a_revisar(hoy=None):
-    """Fuentes fijas + páginas SII de renta relevantes para detectar sueldo grado 1-A.
-
-    La página de renta/{anio_tributario}/personas_naturales.html suele contener
-    la tabla del año comercial anterior. Por eso se revisa también el año
-    tributario siguiente cuando corresponda. Si todavía no existe, se ignora sin
-    generar error crítico.
-    """
+    """Fuentes fijas + páginas SII de renta relevantes para detectar sueldo grado 1-A."""
     hoy = hoy or chile_today()
     fuentes = list(FUENTES_BASE)
     for anio_tributario in sorted({hoy.year, hoy.year + 1}):
@@ -154,7 +148,6 @@ def extraer_texto_html(content):
 
 def extraer_texto_fuente(content, content_type, tipo):
     if tipo == "pdf" or "pdf" in content_type.lower():
-        # Sin dependencia PDF pesada: se usa hash binario y un texto parcial para palabras clave si el PDF lo permite.
         return content.decode("latin-1", errors="ignore")
     return extraer_texto_html(content)
 
@@ -199,7 +192,6 @@ def extraer_anio_tabla_sueldo(texto_norm, fuente):
 
     anio_tributario = extraer_anio_tributario_desde_url(fuente.get("url"))
     if anio_tributario:
-        # En las páginas de Renta del SII, el año tributario suele publicar límites del año comercial anterior.
         return anio_tributario - 1
     return None
 
@@ -209,7 +201,6 @@ def extraer_seccion_sueldo_grado(texto_norm):
     if start < 0:
         return ""
     seccion = texto_norm[start:start + 5000]
-    # Cortar antes de la siguiente tabla grande si el texto trae múltiples secciones seguidas.
     cortes = [
         "porcentajes que los compradores",
         "porcentajes que los mineros",
@@ -229,7 +220,6 @@ def extraer_sueldo_grado_1a(texto, fuente):
 
     anio = extraer_anio_tabla_sueldo(texto_norm, fuente)
     if anio is None:
-        # Evita proponer vigencias sin año confiable.
         return []
 
     seccion = extraer_seccion_sueldo_grado(texto_norm)
@@ -238,7 +228,6 @@ def extraer_sueldo_grado_1a(texto, fuente):
 
     candidatos = []
     for mes_nombre, mes_numero in MESES.items():
-        # La página del SII puede venir como "Enero $ 715.858" o con saltos entre mes y valor.
         patron = rf"\b{mes_nombre}\b\s+(?:\$\s*)?([0-9]{{1,3}}(?:\.[0-9]{{3}})+|[0-9]{{5,}})"
         match = re.search(patron, seccion)
         if not match:
@@ -353,6 +342,7 @@ def main():
     hashes_por_url = {item.get("url"): item for item in hashes_data.get("fuentes", [])}
     fuentes_revisadas = []
     cambios = []
+    baseline_creados = []
     candidatos_sueldo = []
 
     for fuente in fuentes_a_revisar():
@@ -372,7 +362,7 @@ def main():
 
             anterior = hashes_por_url.get(fuente["url"])
             if anterior is None:
-                cambios.append({
+                baseline_creados.append({
                     "fuente": fuente["nombre"],
                     "url": fuente["url"],
                     "motivo": "baseline_creado",
@@ -414,7 +404,6 @@ def main():
             }
         except Exception as exc:
             registro.update({"estado": "error", "error": str(exc)})
-            # Las fuentes opcionales futuras pueden no existir todavía; no deben generar ruido diario si devuelven 404.
             if not fuente.get("opcional"):
                 cambios.append({
                     "fuente": fuente["nombre"],
@@ -437,16 +426,20 @@ def main():
         })
 
     pendientes = pendientes_zonas(zonas_data)
-    if pendientes:
+    pendientes_count = len(pendientes)
+    pendientes_prev_count = hashes_data.get("zonasConPorcentajeNullCount")
+    if pendientes and pendientes_prev_count != pendientes_count:
         cambios.append({
             "fuente": "zonas_extremas.json",
             "motivo": "zonas_con_porcentaje_pendiente",
-            "cantidad": len(pendientes),
+            "cantidad": pendientes_count,
+            "cantidadAnterior": pendientes_prev_count,
             "zonas": pendientes,
         })
 
     hashes_data["fechaActualizacion"] = hoy
     hashes_data["fuentes"] = [hashes_por_url[url] for url in sorted(hashes_por_url) if url]
+    hashes_data["zonasConPorcentajeNullCount"] = pendientes_count
     write_json(HASHES_PATH, hashes_data)
 
     if nuevos_sueldos:
@@ -457,6 +450,7 @@ def main():
         "fechaRevision": hoy,
         "estado": estado,
         "fuentesRevisadas": fuentes_revisadas,
+        "baselineCreados": baseline_creados,
         "cambiosDetectados": cambios,
         "sueldosGrado1ADetectados": candidatos_sueldo,
         "datosPendientes": {
@@ -473,10 +467,12 @@ def main():
         print(f"Revisión requerida. Reporte: {reporte_path.relative_to(ROOT)}")
     else:
         print("Monitoreo DL 889 sin cambios relevantes.")
+        if baseline_creados:
+            print(f"Baseline creado/actualizado para {len(baseline_creados)} fuentes; no se envía alerta por baseline.")
 
     print(f"Fuentes revisadas: {len(fuentes_revisadas)}")
     print(f"Cambios detectados: {len(cambios)}")
-    print(f"Zonas con porcentaje pendiente: {len(pendientes)}")
+    print(f"Zonas con porcentaje pendiente: {pendientes_count}")
 
 
 if __name__ == "__main__":
