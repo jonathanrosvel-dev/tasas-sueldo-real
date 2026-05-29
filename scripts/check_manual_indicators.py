@@ -1,6 +1,5 @@
 import hashlib
 import json
-import os
 import re
 from datetime import datetime
 from pathlib import Path
@@ -9,18 +8,18 @@ from zoneinfo import ZoneInfo
 import requests
 from bs4 import BeautifulSoup
 
+from pending_utils import create_pending, github_link, stable_id
+
 ROOT = Path(__file__).resolve().parents[1]
 MANUAL_DIR = ROOT / "tasas" / "historico" / "manual"
 REPORTES_DIR = ROOT / "tasas" / "historico" / "reportes"
 HASHES_PATH = MANUAL_DIR / "manual_indicator_hashes.json"
 
-GITHUB_BASE = "https://github.com/jonathanrosvel-dev/tasas-sueldo-real/blob/main"
-
 SOURCES = [
     {
         "indicador": "topes_previsionales",
         "nombre_humano": "Topes imponibles AFP/salud y seguro de cesantía",
-        "descripcion": "Estos topes limitan la base usada para cotizaciones previsionales. No cambian todos los días, pero pueden cambiar por resolución o actualización normativa.",
+        "descripcion": "Estos topes limitan la base usada para cotizaciones previsionales. Pueden cambiar por resolución o actualización normativa.",
         "url": "https://www.spensiones.cl/portal/institucional/594/w3-propertyvalue-9923.html",
         "archivo_json": "tasas/historico/manual/topes.json",
         "palabras_clave": ["tope imponible", "afiliados", "seguro de cesantía", "uf", "cotizaciones"],
@@ -36,7 +35,7 @@ SOURCES = [
     {
         "indicador": "seguro_cesantia",
         "nombre_humano": "Seguro de cesantía",
-        "descripcion": "Las tasas del seguro de cesantía no cambian normalmente mes a mes, pero podrían cambiar por modificación legal.",
+        "descripcion": "Las tasas del seguro de cesantía son estables, pero podrían cambiar por modificación legal.",
         "url": "https://www.dt.gob.cl/portal/1628/w3-propertyvalue-145768.html",
         "archivo_json": "tasas/historico/manual/cesantia.json",
         "palabras_clave": ["seguro de cesantía", "contrato indefinido", "plazo fijo", "trabajador", "empleador"],
@@ -44,7 +43,7 @@ SOURCES = [
     {
         "indicador": "afp_comisiones",
         "nombre_humano": "Comisiones AFP",
-        "descripcion": "Las comisiones AFP pueden cambiar. Si la lectura automática falla, la app usa respaldo y conviene revisar la fuente.",
+        "descripcion": "Las comisiones AFP pueden cambiar y conviene revisar la fuente cuando detectemos movimientos.",
         "url": "https://www.spensiones.cl/portal/institucional/594/w3-article-2810.html",
         "archivo_json": "tasas/historico/manual/afp_comisiones.json",
         "palabras_clave": ["capital", "cuprum", "habitat", "modelo", "planvital", "provida", "uno", "comisión"],
@@ -52,7 +51,7 @@ SOURCES = [
     {
         "indicador": "zona_extrema_porcentajes",
         "nombre_humano": "Porcentajes de zona extrema DL 889 / DL 249",
-        "descripcion": "Los porcentajes por comuna son estables por ley, pero si cambia la norma o una fuente oficial, hay que revisar la tabla antes de actualizarla.",
+        "descripcion": "Los porcentajes por comuna son estables por ley, pero si cambia la norma corresponde revisar la tabla.",
         "url": "https://www.bcn.cl/leychile/navegar?idNorma=6368",
         "archivo_json": "tasas/historico/manual/zonas_extremas.json",
         "palabras_clave": ["asignación de zona", "zona", "porcentaje", "tarapacá", "aysén", "magallanes", "chiloé", "palena"],
@@ -60,7 +59,7 @@ SOURCES = [
     {
         "indicador": "zona_extrema_modificacion_1",
         "nombre_humano": "Modificaciones normativa zona extrema",
-        "descripcion": "Fuente complementaria entregada para revisar posibles cambios normativos vinculados a zona extrema.",
+        "descripcion": "Fuente complementaria para revisar posibles cambios normativos vinculados a zona extrema.",
         "url": "https://www.bcn.cl/leychile/navegar?i=1203976",
         "archivo_json": "tasas/historico/manual/zonas_extremas.json",
         "palabras_clave": ["zona", "asignación", "porcentaje", "dl 889", "dl 249"],
@@ -68,7 +67,7 @@ SOURCES = [
     {
         "indicador": "zona_extrema_modificacion_2",
         "nombre_humano": "Normativa relacionada zona extrema",
-        "descripcion": "Fuente complementaria entregada para revisar posibles cambios normativos vinculados a zona extrema.",
+        "descripcion": "Fuente complementaria para revisar posibles cambios normativos vinculados a zona extrema.",
         "url": "https://www.bcn.cl/leychile/navegar?i=6390",
         "archivo_json": "tasas/historico/manual/zonas_extremas.json",
         "palabras_clave": ["zona", "asignación", "porcentaje", "dl 889", "dl 249"],
@@ -123,43 +122,26 @@ def keyword_counts(text, keywords):
     return {kw: text.count(kw.lower()) for kw in keywords}
 
 
-def send_telegram(message):
-    token = os.getenv("TELEGRAM_BOT_TOKEN")
-    chat_id = os.getenv("TELEGRAM_CHAT_ID")
-    if not token or not chat_id:
-        print("Telegram no configurado. No se envió aviso.")
-        return
-    response = requests.post(
-        f"https://api.telegram.org/bot{token}/sendMessage",
-        data={"chat_id": chat_id, "text": message, "disable_web_page_preview": True},
-        timeout=20,
-    )
-    print("Telegram response:", response.status_code, response.text)
-    response.raise_for_status()
-
-
-def human_message(change):
-    json_link = f"{GITHUB_BASE}/{change['archivo_json']}"
-    lines = [
-        "👋 Jonathan, encontré algo que conviene revisar en Sueldo Real Chile.",
-        "",
-        f"📌 Dato: {change['nombre_humano']}",
-        f"⚠️ Qué pasó: {change['mensaje']}",
-        "",
-        change["descripcion"],
-        "",
-        f"🔎 Fuente para revisar:\n{change['url']}",
-        "",
-        f"🛠️ Archivo que se actualizaría si confirmas el cambio:\n{json_link}",
-        "",
-        "No actualicé el valor automáticamente. Revísalo y, cuando tengamos el bot interactivo, podrás aprobar o rechazar desde Telegram.",
-    ]
-    if change.get("keywords"):
-        resumen = ", ".join([f"{k}: {v}" for k, v in change["keywords"].items() if v])
-        if resumen:
-            lines.insert(6, f"🔤 Menciones detectadas: {resumen}")
-            lines.insert(7, "")
-    return "\n".join(lines)
+def build_pending_from_change(change, today):
+    pending_id = stable_id("manual", change["indicador"], change["url"], change.get("hashNuevo"), today)
+    keywords = change.get("keywords") or {}
+    keyword_text = ", ".join([f"{k}: {v}" for k, v in keywords.items() if v]) or None
+    description = change["descripcion"]
+    if keyword_text:
+        description += f"\n\nMenciones relevantes detectadas: {keyword_text}"
+    return pending_id, {
+        "tipo": "revision_indicador_manual",
+        "titulo": change["nombre_humano"],
+        "periodo": today,
+        "valorActual": "Dato vigente guardado en GitHub",
+        "valorDetectado": "Cambio detectado en fuente revisada",
+        "motivo": change.get("mensaje", "Detecté una fuente que requiere revisión."),
+        "descripcion": description,
+        "fuente": change["url"],
+        "targetFile": change["archivo_json"],
+        "linkGitHub": github_link(change["archivo_json"]),
+        "action": None,
+    }
 
 
 def main():
@@ -178,15 +160,11 @@ def main():
     changes = []
     baseline = []
     reviewed = []
+    pendientes_creados = []
 
     for source in SOURCES:
         key = source["indicador"] + "|" + source["url"]
-        record = {
-            "indicador": source["indicador"],
-            "nombre": source["nombre_humano"],
-            "url": source["url"],
-            "estado": "ok",
-        }
+        record = {"indicador": source["indicador"], "nombre": source["nombre_humano"], "url": source["url"], "estado": "ok"}
         try:
             html = get_content(source["url"])
             text = clean_text(html)
@@ -195,32 +173,14 @@ def main():
             old = stored.get(key)
 
             if old is None:
-                baseline.append({
-                    **source,
-                    "mensaje": "dejé registrada esta fuente por primera vez para compararla en próximas revisiones.",
-                    "hashNuevo": new_hash,
-                    "keywords": counts,
-                })
+                baseline.append({**source, "mensaje": "baseline_creado", "hashNuevo": new_hash, "keywords": counts})
             elif old.get("hash") != new_hash:
-                changes.append({
-                    **source,
-                    "mensaje": "la fuente oficial o de referencia cambió desde la última revisión. Podría ser un cambio real o una actualización menor de la página.",
-                    "hashAnterior": old.get("hash"),
-                    "hashNuevo": new_hash,
-                    "keywords": counts,
-                })
+                changes.append({**source, "mensaje": "La fuente cambió desde la última revisión.", "hashAnterior": old.get("hash"), "hashNuevo": new_hash, "keywords": counts})
             else:
                 old_counts = old.get("keywordCounts", {})
                 for keyword, count in counts.items():
                     if count > old_counts.get(keyword, 0):
-                        changes.append({
-                            **source,
-                            "mensaje": f"aumentaron las menciones de '{keyword}' en la fuente revisada. Conviene revisar si hubo cambio normativo o de criterio.",
-                            "keyword": keyword,
-                            "conteoAnterior": old_counts.get(keyword, 0),
-                            "conteoNuevo": count,
-                            "keywords": counts,
-                        })
+                        changes.append({**source, "mensaje": f"Aumentaron las menciones de '{keyword}'.", "keyword": keyword, "conteoAnterior": old_counts.get(keyword, 0), "conteoNuevo": count, "keywords": counts, "hashNuevo": new_hash})
                         break
 
             stored[key] = {
@@ -235,16 +195,17 @@ def main():
             record.update({"hash": new_hash, "keywordCounts": counts})
         except Exception as exc:
             record.update({"estado": "error", "error": str(exc)})
-            changes.append({
-                **source,
-                "mensaje": f"no pude revisar esta fuente automáticamente ({exc}). Conviene abrir el link y verificar manualmente.",
-                "keywords": {},
-            })
-
+            changes.append({**source, "mensaje": f"No pude revisar esta fuente: {exc}", "keywords": {}, "hashNuevo": f"error-{today}"})
         reviewed.append(record)
 
     hashes["fechaActualizacion"] = today
     write_json(HASHES_PATH, hashes)
+
+    for change in changes:
+        pending_id, payload = build_pending_from_change(change, today)
+        created, pending_path = create_pending(pending_id, payload)
+        if created:
+            pendientes_creados.append(str(pending_path.relative_to(ROOT)))
 
     report = {
         "fechaRevision": today,
@@ -252,18 +213,17 @@ def main():
         "fuentesRevisadas": reviewed,
         "baselineCreados": baseline,
         "cambiosDetectados": changes,
+        "pendientesCreados": pendientes_creados,
     }
-    report_path = REPORTES_DIR / f"manual_indicators_{today}.json"
     if changes:
+        report_path = REPORTES_DIR / f"manual_indicators_{today}.json"
         write_json(report_path, report)
-        for change in changes:
-            send_telegram(human_message(change))
         print(f"Revisión requerida. Reporte: {report_path.relative_to(ROOT)}")
+        print(f"Pendientes creados: {len(pendientes_creados)}")
     else:
         print("Monitoreo de indicadores manuales sin cambios relevantes.")
         if baseline:
             print(f"Baseline creado para {len(baseline)} fuentes; no se envía Telegram por baseline.")
-
     print(f"Fuentes revisadas: {len(reviewed)}")
     print(f"Cambios detectados: {len(changes)}")
 
