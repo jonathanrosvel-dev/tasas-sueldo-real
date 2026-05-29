@@ -1,0 +1,24 @@
+{
+  "id": "test_bot_telegram",
+  "estado": "pendiente",
+  "tipo": "prueba_bot",
+  "titulo": "Prueba segura del bot interactivo",
+  "periodo": "prueba",
+  "valorActual": "pendiente_prueba",
+  "valorDetectado": "validado_por_telegram",
+  "motivo": "Este pendiente solo prueba que los botones de Telegram pueden modificar GitHub. No afecta tasas reales ni la app.",
+  "descripcion": "Al presionar Validar, el Worker debe cambiar el estado de bot_test.json a validado_por_telegram. Al presionar Rechazar, debe cambiarlo a rechazado_por_telegram.",
+  "fuente": "Prueba interna",
+  "targetFile": "tasas/historico/manual/bot_test.json",
+  "action": {
+    "kind": "merge_root_fields",
+    "fieldsOk": {
+      "estado": "validado_por_telegram",
+      "ultimaPrueba": "aprobado_desde_telegram"
+    },
+    "fieldsReject": {
+      "estado": "rechazado_por_telegram",
+      "ultimaPrueba": "rechazado_desde_telegram"
+    }
+  }
+}
