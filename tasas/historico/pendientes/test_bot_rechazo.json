@@ -20,5 +20,10 @@
       "estado": "rechazado_por_telegram",
       "ultimaPrueba": "rechazado_desde_telegram"
     }
+  },
+  "telegram": {
+    "enviado": true,
+    "fechaEnvio": "2026-05-28T21:33:51.049544-04:00",
+    "messageId": 79
   }
 }
