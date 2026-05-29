@@ -1,0 +1,24 @@
+{
+  "id": "test_bot_rechazo",
+  "estado": "pendiente",
+  "tipo": "prueba_bot",
+  "titulo": "Prueba segura de rechazo del bot interactivo",
+  "periodo": "prueba",
+  "valorActual": "validado_por_telegram",
+  "valorDetectado": "rechazado_por_telegram",
+  "motivo": "Este pendiente solo prueba que el botón Rechazar puede modificar GitHub. No afecta tasas reales ni la app.",
+  "descripcion": "Al presionar Rechazar, el Worker debe cambiar el estado de bot_test.json a rechazado_por_telegram. Si presionas Validar, lo volverá a dejar como validado_por_telegram.",
+  "fuente": "Prueba interna",
+  "targetFile": "tasas/historico/manual/bot_test.json",
+  "action": {
+    "kind": "merge_root_fields",
+    "fieldsOk": {
+      "estado": "validado_por_telegram",
+      "ultimaPrueba": "aprobado_desde_telegram"
+    },
+    "fieldsReject": {
+      "estado": "rechazado_por_telegram",
+      "ultimaPrueba": "rechazado_desde_telegram"
+    }
+  }
+}
