@@ -1,0 +1,49 @@
+name: check-manual-indicators
+
+on:
+  schedule:
+    - cron: "0 12 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  check-manual-indicators:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar dependencias
+        run: pip install requests beautifulsoup4
+
+      - name: Monitorear indicadores manuales
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python scripts/check_manual_indicators.py
+
+      - name: Verificar cambios permitidos
+        id: verify-changed-files
+        run: |
+          if [ -n "$(git status --porcelain tasas/historico/manual/manual_indicator_hashes.json tasas/historico/reportes)" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit automatico
+        if: steps.verify-changed-files.outputs.changed == 'true'
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Monitorear indicadores manuales"
+          file_pattern: |
+            tasas/historico/manual/manual_indicator_hashes.json
+            tasas/historico/reportes/**
