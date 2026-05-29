@@ -1,6 +1,6 @@
 {
   "id": "test_bot_telegram",
-  "estado": "pendiente",
+  "estado": "aprobado",
   "tipo": "prueba_bot",
   "titulo": "Prueba segura del bot interactivo",
   "periodo": "prueba",
@@ -25,5 +25,11 @@
     "enviado": true,
     "fechaEnvio": "2026-05-28T21:23:59.778322-04:00",
     "messageId": 76
+  },
+  "resueltoPorTelegram": {
+    "userId": "8506946339",
+    "username": null,
+    "fecha": "2026-05-29T01:24:38.415Z",
+    "decision": "ok"
   }
 }
