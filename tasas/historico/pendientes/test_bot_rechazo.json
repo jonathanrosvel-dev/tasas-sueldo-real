@@ -1,6 +1,6 @@
 {
   "id": "test_bot_rechazo",
-  "estado": "pendiente",
+  "estado": "rechazado",
   "tipo": "prueba_bot",
   "titulo": "Prueba segura de rechazo del bot interactivo",
   "periodo": "prueba",
@@ -25,5 +25,11 @@
     "enviado": true,
     "fechaEnvio": "2026-05-28T21:33:51.049544-04:00",
     "messageId": 79
+  },
+  "resueltoPorTelegram": {
+    "userId": "8506946339",
+    "username": null,
+    "fecha": "2026-05-29T01:33:57.384Z",
+    "decision": "no"
   }
 }
