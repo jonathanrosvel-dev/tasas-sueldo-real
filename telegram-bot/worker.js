@@ -35,11 +35,31 @@ async function telegramApi(env, method, body) {
   return data;
 }
 
+async function safeTelegramApi(env, method, body) {
+  try {
+    return await telegramApi(env, method, body);
+  } catch (error) {
+    console.log(`Telegram ${method} ignored: ${error.message}`);
+    return null;
+  }
+}
+
 async function answerCallback(env, callbackQueryId, text) {
-  return telegramApi(env, 'answerCallbackQuery', {
+  return safeTelegramApi(env, 'answerCallbackQuery', {
     callback_query_id: callbackQueryId,
     text,
     show_alert: false,
+  });
+}
+
+async function removeInlineKeyboard(env, callback) {
+  const chatId = callback?.message?.chat?.id;
+  const messageId = callback?.message?.message_id;
+  if (!chatId || !messageId) return;
+  await safeTelegramApi(env, 'editMessageReplyMarkup', {
+    chat_id: chatId,
+    message_id: messageId,
+    reply_markup: { inline_keyboard: [] },
   });
 }
 
@@ -70,11 +90,7 @@ async function githubGetFile(env, path) {
 async function githubPutFile(env, path, content, sha, message) {
   const { repo, branch, token } = githubConfig(env);
   const url = `https://api.github.com/repos/${repo}/contents/${encodeURIComponentPath(path)}`;
-  const body = {
-    message,
-    content: encodeBase64Utf8(content),
-    branch,
-  };
+  const body = { message, content: encodeBase64Utf8(content), branch };
   if (sha) body.sha = sha;
   const response = await fetch(url, {
     method: 'PUT',
@@ -111,9 +127,7 @@ function decodeBase64Utf8(base64) {
 
 function parseCallbackData(value) {
   const parts = String(value || '').split(':');
-  if (parts.length !== 3 || parts[0] !== 'sr') {
-    throw new Error('Callback no reconocido');
-  }
+  if (parts.length !== 3 || parts[0] !== 'sr') throw new Error('Callback no reconocido');
   const decision = parts[1];
   const id = parts[2];
   if (!['ok', 'no'].includes(decision)) throw new Error('Decisión inválida');
@@ -144,12 +158,7 @@ function applyPendingAction(targetJson, pending, decision, userId) {
     const item = findMatchingItem(list, action.match);
     if (!item) throw new Error('No encontré el registro exacto en el JSON objetivo');
     item.estado = decision === 'ok' ? (action.estadoOk || 'manual_validado') : (action.estadoReject || 'manual_requerido');
-    item.validacionTelegram = {
-      decision: decision === 'ok' ? 'aprobado' : 'rechazado',
-      userId: String(userId),
-      fecha: now,
-      pendingId: pending.id,
-    };
+    item.validacionTelegram = { decision: decision === 'ok' ? 'aprobado' : 'rechazado', userId: String(userId), fecha: now, pendingId: pending.id };
     item.nota = decision === 'ok'
       ? `${item.nota || ''} Validado por Telegram el ${now}.`.trim()
       : `${item.nota || ''} Rechazado por Telegram el ${now}; requiere revisión manual.`.trim();
@@ -161,7 +170,11 @@ function applyPendingAction(targetJson, pending, decision, userId) {
     return { ...targetJson, ...fields };
   }
 
-  throw new Error(`Acción no soportada: ${action.kind || 'sin_kind'}`);
+  if (!action.kind) {
+    return targetJson;
+  }
+
+  throw new Error(`Acción no soportada: ${action.kind}`);
 }
 
 async function processDecision(env, update) {
@@ -170,11 +183,13 @@ async function processDecision(env, update) {
   const { decision, id } = parseCallbackData(callback.data);
   const pendingPath = `tasas/historico/pendientes/${id}.json`;
   const pendingFile = await githubGetFile(env, pendingPath);
-  if (!pendingFile) throw new Error(`No existe pendiente ${id}`);
+  if (!pendingFile) {
+    return { missing: true, title: id, message: 'El pendiente aún no existe en GitHub o ya fue eliminado. Espera un minuto y revisa el último mensaje enviado por el bot.' };
+  }
 
   const pending = pendingFile.json;
   if (pending.estado && pending.estado !== 'pendiente') {
-    return { already: true, message: `Este pendiente ya estaba en estado: ${pending.estado}` };
+    return { already: true, title: pending.titulo || id, message: `Este pendiente ya estaba en estado: ${pending.estado}` };
   }
 
   let targetResult = null;
@@ -183,15 +198,7 @@ async function processDecision(env, update) {
     if (!targetFile) throw new Error(`No existe archivo objetivo ${pending.targetFile}`);
     const updatedJson = applyPendingAction(targetFile.json, pending, decision, userId);
     const updatedContent = `${JSON.stringify(updatedJson, null, 2)}\n`;
-    targetResult = await githubPutFile(
-      env,
-      pending.targetFile,
-      updatedContent,
-      targetFile.sha,
-      decision === 'ok'
-        ? `Validar ${pending.titulo || id} desde Telegram`
-        : `Rechazar ${pending.titulo || id} desde Telegram`,
-    );
+    targetResult = await githubPutFile(env, pending.targetFile, updatedContent, targetFile.sha, decision === 'ok' ? `Validar ${pending.titulo || id} desde Telegram` : `Rechazar ${pending.titulo || id} desde Telegram`);
   }
 
   pending.estado = decision === 'ok' ? 'aprobado' : 'rechazado';
@@ -204,19 +211,13 @@ async function processDecision(env, update) {
   const pendingContent = `${JSON.stringify(pending, null, 2)}\n`;
   await githubPutFile(env, pendingPath, pendingContent, pendingFile.sha, `Resolver pendiente ${id} desde Telegram`);
 
-  return {
-    decision,
-    title: pending.titulo || id,
-    targetFile: pending.targetFile,
-    commitUrl: targetResult?.commit?.html_url || null,
-  };
+  return { decision, title: pending.titulo || id, targetFile: pending.targetFile, commitUrl: targetResult?.commit?.html_url || null };
 }
 
 function resultText(result) {
+  if (result.missing) return `🟡 Jonathan, no encontré ese pendiente en GitHub.\n\nPuede pasar si el botón se apretó antes de que GitHub terminara el commit o si el mensaje era antiguo.\n\nPendiente: ${result.title}`;
   if (result.already) return `ℹ️ ${result.message}`;
-  if (result.decision === 'ok') {
-    return `✅ Listo, Jonathan.\n\nValidé: ${result.title}\nArchivo: ${result.targetFile || 'pendiente registrado'}\n\nLa app podrá usar el dato desde GitHub cuando descargue el JSON remoto.`;
-  }
+  if (result.decision === 'ok') return `✅ Listo, Jonathan.\n\nValidé: ${result.title}\nArchivo: ${result.targetFile || 'pendiente registrado'}\n\nLa app podrá usar el dato desde GitHub cuando descargue el JSON remoto.`;
   return `🟡 Entendido, Jonathan.\n\nDejé rechazado o pendiente de revisión: ${result.title}\nArchivo: ${result.targetFile || 'pendiente registrado'}\n\nNo lo marqué como validado.`;
 }
 
@@ -229,22 +230,23 @@ async function handleTelegramUpdate(request, env) {
   }
 
   if (update.callback_query) {
+    await answerCallback(env, update.callback_query.id, 'Recibido');
     try {
-      await answerCallback(env, update.callback_query.id, 'Procesando...');
       const result = await processDecision(env, update);
-      await telegramApi(env, 'sendMessage', {
+      if (!result.missing) await removeInlineKeyboard(env, update.callback_query);
+      await safeTelegramApi(env, 'sendMessage', {
         chat_id: update.callback_query.message.chat.id,
         text: resultText(result),
         disable_web_page_preview: true,
       });
       return jsonResponse({ ok: true, result });
     } catch (error) {
-      await telegramApi(env, 'sendMessage', {
+      await safeTelegramApi(env, 'sendMessage', {
         chat_id: update.callback_query.message.chat.id,
         text: `⚠️ No pude procesar la decisión.\n\n${error.message}`,
         disable_web_page_preview: true,
       });
-      return jsonResponse({ ok: false, error: error.message }, 500);
+      return jsonResponse({ ok: true, handled_error: error.message });
     }
   }
 
@@ -258,9 +260,7 @@ export default {
       if (url.pathname === '/health') return jsonResponse({ ok: true, service: 'sueldo-real-telegram-bot' });
       return textResponse('Sueldo Real Chile Telegram Bot OK');
     }
-    if (request.method === 'POST') {
-      return handleTelegramUpdate(request, env);
-    }
+    if (request.method === 'POST') return handleTelegramUpdate(request, env);
     return textResponse('Method not allowed', 405);
   },
 };
