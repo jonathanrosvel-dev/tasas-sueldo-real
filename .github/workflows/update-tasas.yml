@@ -1,0 +1,56 @@
+name: update
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+    - cron: "0 10 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar dependencias
+        run: pip install requests beautifulsoup4
+
+      - name: Ejecutar actualización de tasas
+        run: python scripts/update_tasas.py update-current
+
+      - name: Crear pendientes de tasas actuales
+        run: python scripts/create_tasas_pending_from_current.py
+
+      - name: Enviar pendientes con botones
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python scripts/send_pending_telegram.py
+
+      - name: Verificar cambios
+        id: verify-changed-files
+        run: |
+          if [ -n "$(git status --porcelain tasas.json tasas/historico)" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit automatico
+        if: steps.verify-changed-files.outputs.changed == 'true'
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Actualizar tasas automatico"
+          file_pattern: |
+            tasas.json
+            tasas/historico/**
