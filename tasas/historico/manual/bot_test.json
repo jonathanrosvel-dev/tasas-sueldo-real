@@ -1,5 +1,5 @@
 {
   "descripcion": "Archivo seguro para probar el bot interactivo de Telegram",
-  "estado": "validado_por_telegram",
-  "ultimaPrueba": "aprobado_desde_telegram"
+  "estado": "rechazado_por_telegram",
+  "ultimaPrueba": "rechazado_desde_telegram"
 }
