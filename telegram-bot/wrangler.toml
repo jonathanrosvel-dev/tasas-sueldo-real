@@ -1,0 +1,7 @@
+name = "sueldo-real-bot"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+
+[vars]
+GITHUB_REPO = "jonathanrosvel-dev/tasas-sueldo-real"
+GITHUB_BRANCH = "main"
