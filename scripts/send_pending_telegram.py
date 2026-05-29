@@ -8,6 +8,7 @@ import requests
 
 ROOT = Path(__file__).resolve().parents[1]
 PENDIENTES_DIR = ROOT / "tasas" / "historico" / "pendientes"
+GITHUB_BASE = "https://github.com/jonathanrosvel-dev/tasas-sueldo-real/blob/main"
 
 
 def chile_now():
@@ -24,6 +25,15 @@ def write_json(path, data):
     with path.open("w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
         f.write("\n")
+
+
+def github_file_link(path):
+    if not path:
+        return None
+    text = str(path)
+    if text.startswith("http://") or text.startswith("https://"):
+        return text
+    return f"{GITHUB_BASE}/{text.lstrip('/')}"
 
 
 def telegram_send_message(text, pending_id):
@@ -74,13 +84,16 @@ def build_message(pending):
         lines.extend(["", pending["descripcion"]])
     if pending.get("fuente"):
         lines.extend(["", f"🔎 Fuente para revisar:\n{pending['fuente']}"])
-    if pending.get("targetFile"):
-        lines.extend(["", f"🛠️ Archivo que se actualizará si validas:\n{pending['targetFile']}"])
+
+    target_link = pending.get("linkGitHub") or github_file_link(pending.get("targetFile"))
+    if target_link:
+        lines.extend(["", f"🛠️ Archivo que debes revisar en GitHub:\n{target_link}"])
+
     lines.extend([
         "",
         "Elige una opción:",
-        "✅ Validar: marca el dato como aceptado en GitHub.",
-        "❌ Rechazar: deja el dato como pendiente/requiere revisión.",
+        "✅ Validar: marca este pendiente como revisado/aprobado.",
+        "❌ Rechazar: lo deja como pendiente/requiere revisión.",
     ])
     return "\n".join(lines)
 
