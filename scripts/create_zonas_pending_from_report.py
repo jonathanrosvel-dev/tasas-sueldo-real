@@ -20,18 +20,76 @@ def latest_zonas_report():
     return reports[-1]
 
 
+def format_clp(valor):
+    try:
+        return "$" + f"{int(valor):,}".replace(",", ".")
+    except Exception:
+        return str(valor)
+
+
+def nombre_mes(mes):
+    return {
+        1: "enero",
+        2: "febrero",
+        3: "marzo",
+        4: "abril",
+        5: "mayo",
+        6: "junio",
+        7: "julio",
+        8: "agosto",
+        9: "septiembre",
+        10: "octubre",
+        11: "noviembre",
+        12: "diciembre",
+    }.get(mes, "mes")
+
+
+def periodo_humano(item):
+    desde = str(item.get("desde") or "")
+    hasta = str(item.get("hasta") or "")
+    partes_desde = desde.split("-")
+    partes_hasta = hasta.split("-")
+
+    if len(partes_desde) == 3 and len(partes_hasta) == 3:
+        anio_desde = partes_desde[0]
+        anio_hasta = partes_hasta[0]
+        mes_desde = int(partes_desde[1]) if partes_desde[1].isdigit() else None
+        mes_hasta = int(partes_hasta[1]) if partes_hasta[1].isdigit() else None
+        if mes_desde and mes_hasta and anio_desde == anio_hasta:
+            if mes_desde == mes_hasta:
+                return f"{nombre_mes(mes_desde).capitalize()} {anio_desde}"
+            return f"{nombre_mes(mes_desde).capitalize()} a {nombre_mes(mes_hasta)} {anio_desde}"
+
+    return f"{item.get('desde')} a {item.get('hasta')}"
+
+
 def pending_for_sueldo(item, fecha_revision):
-    periodo = f"{item.get('desde')} a {item.get('hasta')}"
-    pending_id = stable_id("zona_sueldo_1a", item.get("desde"), item.get("hasta"), item.get("valor"), item.get("url"))
+    periodo = periodo_humano(item)
+    valor = item.get("valor")
+    valor_texto = format_clp(valor)
+    fuente_nombre = item.get("fuente") or "SII"
+    fuente_url = item.get("url")
+    pending_id = stable_id("zona_sueldo_1a", item.get("desde"), item.get("hasta"), valor, fuente_url)
+
     return pending_id, {
         "tipo": "validar_sueldo_grado_1a",
-        "titulo": "Sueldo grado 1-A para rebaja de zona extrema",
+        "titulo": f"Nuevo sueldo grado 1-A detectado: {periodo}",
         "periodo": periodo,
-        "valorActual": "Nuevo dato agregado como manual_pendiente",
-        "valorDetectado": item.get("valor"),
-        "motivo": "El monitoreo detectó un nuevo sueldo grado 1-A desde una fuente SII. Debe revisarse antes de marcarlo como validado.",
-        "descripcion": "Este valor se usa como base del tope para la rebaja de zona extrema DL 889. Validar solo si el dato coincide con la fuente oficial indicada.",
-        "fuente": item.get("url") or item.get("fuente"),
+        "valorActual": "Dato agregado como pendiente de validación en GitHub",
+        "valorDetectado": valor_texto,
+        "motivo": (
+            f"Detecté un nuevo valor de sueldo grado 1-A publicado por {fuente_nombre}. "
+            "Este dato se usa como base para calcular el tope de la rebaja de zona extrema."
+        ),
+        "descripcion": (
+            "Revísalo en la fuente oficial antes de validarlo.\n\n"
+            f"Mes o período detectado: {periodo}\n"
+            f"Valor detectado: {valor_texto}\n"
+            f"Fuente informada: {fuente_nombre}\n\n"
+            "✅ Si presionas Validar, el dato queda como manual_validado y la app podrá usarlo para cálculos de zona extrema.\n"
+            "❌ Si presionas Rechazar, queda marcado como manual_requerido y no se debe usar como validado."
+        ),
+        "fuente": fuente_url or fuente_nombre,
         "targetFile": ZONAS_PATH,
         "linkGitHub": github_link(ZONAS_PATH),
         "fechaRevision": fecha_revision,
@@ -41,7 +99,7 @@ def pending_for_sueldo(item, fecha_revision):
             "match": {
                 "desde": item.get("desde"),
                 "hasta": item.get("hasta"),
-                "valor": item.get("valor"),
+                "valor": valor,
             },
             "estadoOk": "manual_validado",
             "estadoReject": "manual_requerido",
