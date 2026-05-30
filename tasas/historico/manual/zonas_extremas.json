@@ -12,14 +12,24 @@
       "uso": "Requisitos generales y naturaleza de la rebaja"
     },
     {
-      "nombre": "SII valores y fechas renta 2026",
-      "url": "https://www.sii.cl/valores_y_fechas/renta/2026/personas_naturales.html",
-      "uso": "Tabla SII de sueldo grado 1-A para rebaja de presuncion de asignacion de zona"
+      "nombre": "SII Circular N°7 de 2026",
+      "url": "https://www.sii.cl/normativa_legislacion/circulares/2026/circu7.pdf",
+      "uso": "Sueldo grado 1-A informado para diciembre 2025, enero, febrero y marzo 2026; modifica Circulares N°62/2025, N°67/2025 y N°2/2026"
     },
     {
-      "nombre": "SII Circular N°2 de 2026",
-      "url": "https://www.sii.cl/normativa_legislacion/circulares/2026/circu2.pdf",
-      "uso": "Respaldo puntual de sueldo grado 1-A informado para febrero 2026"
+      "nombre": "SII Circular N°10 de 2026",
+      "url": "https://www.sii.cl/normativa_legislacion/circulares/2026/circu10.pdf",
+      "uso": "Sueldo grado 1-A informado para abril 2026"
+    },
+    {
+      "nombre": "SII Circular N°15 de 2026",
+      "url": "https://www.sii.cl/normativa_legislacion/circulares/2026/circu15.pdf",
+      "uso": "Sueldo grado 1-A informado para mayo 2026"
+    },
+    {
+      "nombre": "SII Circular N°18 de 2026",
+      "url": "https://www.sii.cl/normativa_legislacion/circulares/2026/circu18.pdf",
+      "uso": "Sueldo grado 1-A informado para junio 2026"
     },
     {
       "nombre": "SII pregunta frecuente DDJJ 1887 zonas extremas",
@@ -47,710 +57,93 @@
   },
   "sueldoGrado1A": [
     {
-      "desde": "2026-02-01",
-      "hasta": "2026-02-28",
-      "valor": 720439,
+      "desde": "2026-01-01",
+      "hasta": "2026-03-31",
+      "valor": 734848,
       "estado": "manual_validado",
-      "fuente": "SII Circular N°2/2026",
-      "url": "https://www.sii.cl/normativa_legislacion/circulares/2026/circu2.pdf",
-      "nota": "Dato puntual observado para febrero 2026. No extrapolar a otros meses sin nueva fuente."
+      "fuente": "SII Circular N°7/2026",
+      "url": "https://www.sii.cl/normativa_legislacion/circulares/2026/circu7.pdf",
+      "nota": "La Circular N°7/2026 indica que el sueldo grado 1-A asciende en diciembre 2025, enero, febrero y marzo 2026 a $734.848 y modifica las Circulares N°62/2025, N°67/2025 y N°2/2026."
+    },
+    {
+      "desde": "2026-04-01",
+      "hasta": "2026-04-30",
+      "valor": 734848,
+      "estado": "manual_validado",
+      "fuente": "SII Circular N°10/2026",
+      "url": "https://www.sii.cl/normativa_legislacion/circulares/2026/circu10.pdf",
+      "nota": "La Circular N°10/2026 informa que para abril 2026 el sueldo grado 1-A asciende a $734.848."
+    },
+    {
+      "desde": "2026-05-01",
+      "hasta": "2026-05-31",
+      "valor": 734848,
+      "estado": "manual_validado",
+      "fuente": "SII Circular N°15/2026",
+      "url": "https://www.sii.cl/normativa_legislacion/circulares/2026/circu15.pdf",
+      "nota": "La Circular N°15/2026 informa que para mayo 2026 el sueldo grado 1-A asciende a $734.848."
+    },
+    {
+      "desde": "2026-06-01",
+      "hasta": "2026-06-30",
+      "valor": 745136,
+      "estado": "manual_validado",
+      "fuente": "SII Circular N°18/2026",
+      "url": "https://www.sii.cl/normativa_legislacion/circulares/2026/circu18.pdf",
+      "nota": "La Circular N°18/2026 informa que para junio 2026 el sueldo grado 1-A asciende a $745.136."
     }
   ],
   "zonas": [
-    {
-      "nombre": "Arica",
-      "tipo": "comuna",
-      "region": "Arica y Parinacota",
-      "provincia": "Arica",
-      "grupoZona": "Arica y Parinacota",
-      "comunas": [
-        "Arica"
-      ],
-      "porcentaje": 56.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Camarones",
-      "tipo": "comuna",
-      "region": "Arica y Parinacota",
-      "provincia": "Arica",
-      "grupoZona": "Arica y Parinacota",
-      "comunas": [
-        "Camarones"
-      ],
-      "porcentaje": 77.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Putre",
-      "tipo": "comuna",
-      "region": "Arica y Parinacota",
-      "provincia": "Parinacota",
-      "grupoZona": "Arica y Parinacota",
-      "comunas": [
-        "Putre"
-      ],
-      "porcentaje": 112.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "General Lagos",
-      "tipo": "comuna",
-      "region": "Arica y Parinacota",
-      "provincia": "Parinacota",
-      "grupoZona": "Arica y Parinacota",
-      "comunas": [
-        "General Lagos"
-      ],
-      "porcentaje": 77.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Iquique",
-      "tipo": "comuna",
-      "region": "Tarapaca",
-      "provincia": "Iquique",
-      "grupoZona": "Tarapaca",
-      "comunas": [
-        "Iquique"
-      ],
-      "porcentaje": 56.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Alto Hospicio",
-      "tipo": "comuna",
-      "region": "Tarapaca",
-      "provincia": "Iquique",
-      "grupoZona": "Tarapaca",
-      "comunas": [
-        "Alto Hospicio"
-      ],
-      "porcentaje": 56.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Pozo Almonte",
-      "tipo": "comuna",
-      "region": "Tarapaca",
-      "provincia": "Tamarugal",
-      "grupoZona": "Tarapaca",
-      "comunas": [
-        "Pozo Almonte"
-      ],
-      "porcentaje": 77.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Camina",
-      "tipo": "comuna",
-      "region": "Tarapaca",
-      "provincia": "Tamarugal",
-      "grupoZona": "Tarapaca",
-      "comunas": [
-        "Camina"
-      ],
-      "porcentaje": 112.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Colchane",
-      "tipo": "comuna",
-      "region": "Tarapaca",
-      "provincia": "Tamarugal",
-      "grupoZona": "Tarapaca",
-      "comunas": [
-        "Colchane"
-      ],
-      "porcentaje": 112.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Huara",
-      "tipo": "comuna",
-      "region": "Tarapaca",
-      "provincia": "Tamarugal",
-      "grupoZona": "Tarapaca",
-      "comunas": [
-        "Huara"
-      ],
-      "porcentaje": 77.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Pica",
-      "tipo": "comuna",
-      "region": "Tarapaca",
-      "provincia": "Tamarugal",
-      "grupoZona": "Tarapaca",
-      "comunas": [
-        "Pica"
-      ],
-      "porcentaje": 77.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Aysen",
-      "tipo": "comuna",
-      "region": "Aysen",
-      "provincia": "Aysen",
-      "grupoZona": "Aysen",
-      "comunas": [
-        "Aysen"
-      ],
-      "porcentaje": 147.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Coyhaique",
-      "tipo": "comuna",
-      "region": "Aysen",
-      "provincia": "Coyhaique",
-      "grupoZona": "Aysen",
-      "comunas": [
-        "Coyhaique"
-      ],
-      "porcentaje": 147.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Chile Chico",
-      "tipo": "comuna",
-      "region": "Aysen",
-      "provincia": "General Carrera",
-      "grupoZona": "Aysen",
-      "comunas": [
-        "Chile Chico"
-      ],
-      "porcentaje": 175.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Cisnes",
-      "tipo": "comuna",
-      "region": "Aysen",
-      "provincia": "Aysen",
-      "grupoZona": "Aysen",
-      "comunas": [
-        "Cisnes"
-      ],
-      "porcentaje": 175.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Cochrane",
-      "tipo": "comuna",
-      "region": "Aysen",
-      "provincia": "Capitan Prat",
-      "grupoZona": "Aysen",
-      "comunas": [
-        "Cochrane"
-      ],
-      "porcentaje": 175.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Guaitecas",
-      "tipo": "comuna",
-      "region": "Aysen",
-      "provincia": "Aysen",
-      "grupoZona": "Aysen",
-      "comunas": [
-        "Guaitecas"
-      ],
-      "porcentaje": 126.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Lago Verde",
-      "tipo": "comuna",
-      "region": "Aysen",
-      "provincia": "Coyhaique",
-      "grupoZona": "Aysen",
-      "comunas": [
-        "Lago Verde"
-      ],
-      "porcentaje": 175.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "O'Higgins",
-      "tipo": "comuna",
-      "region": "Aysen",
-      "provincia": "Capitan Prat",
-      "grupoZona": "Aysen",
-      "comunas": [
-        "O'Higgins"
-      ],
-      "porcentaje": 175.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Rio Ibanez",
-      "tipo": "comuna",
-      "region": "Aysen",
-      "provincia": "General Carrera",
-      "grupoZona": "Aysen",
-      "comunas": [
-        "Rio Ibanez"
-      ],
-      "porcentaje": 175.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Tortel",
-      "tipo": "comuna",
-      "region": "Aysen",
-      "provincia": "Capitan Prat",
-      "grupoZona": "Aysen",
-      "comunas": [
-        "Tortel"
-      ],
-      "porcentaje": 175.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Punta Arenas",
-      "tipo": "comuna",
-      "region": "Magallanes",
-      "provincia": "Magallanes",
-      "grupoZona": "Magallanes",
-      "comunas": [
-        "Punta Arenas"
-      ],
-      "porcentaje": 98.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Laguna Blanca",
-      "tipo": "comuna",
-      "region": "Magallanes",
-      "provincia": "Magallanes",
-      "grupoZona": "Magallanes",
-      "comunas": [
-        "Laguna Blanca"
-      ],
-      "porcentaje": 133.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Rio Verde",
-      "tipo": "comuna",
-      "region": "Magallanes",
-      "provincia": "Magallanes",
-      "grupoZona": "Magallanes",
-      "comunas": [
-        "Rio Verde"
-      ],
-      "porcentaje": 98.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "San Gregorio",
-      "tipo": "comuna",
-      "region": "Magallanes",
-      "provincia": "Magallanes",
-      "grupoZona": "Magallanes",
-      "comunas": [
-        "San Gregorio"
-      ],
-      "porcentaje": 98.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Natales",
-      "tipo": "comuna",
-      "region": "Magallanes",
-      "provincia": "Ultima Esperanza",
-      "grupoZona": "Magallanes",
-      "comunas": [
-        "Natales"
-      ],
-      "porcentaje": 119.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Torres del Paine",
-      "tipo": "comuna",
-      "region": "Magallanes",
-      "provincia": "Ultima Esperanza",
-      "grupoZona": "Magallanes",
-      "comunas": [
-        "Torres del Paine"
-      ],
-      "porcentaje": 119.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Porvenir",
-      "tipo": "comuna",
-      "region": "Magallanes",
-      "provincia": "Tierra del Fuego",
-      "grupoZona": "Magallanes",
-      "comunas": [
-        "Porvenir"
-      ],
-      "porcentaje": 119.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Primavera",
-      "tipo": "comuna",
-      "region": "Magallanes",
-      "provincia": "Tierra del Fuego",
-      "grupoZona": "Magallanes",
-      "comunas": [
-        "Primavera"
-      ],
-      "porcentaje": 119.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Timaukel",
-      "tipo": "comuna",
-      "region": "Magallanes",
-      "provincia": "Tierra del Fuego",
-      "grupoZona": "Magallanes",
-      "comunas": [
-        "Timaukel"
-      ],
-      "porcentaje": 119.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Cabo de Hornos",
-      "tipo": "comuna",
-      "region": "Magallanes",
-      "provincia": "Antartica Chilena",
-      "grupoZona": "Magallanes",
-      "comunas": [
-        "Cabo de Hornos"
-      ],
-      "porcentaje": 147.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Antartica",
-      "tipo": "comuna",
-      "region": "Magallanes",
-      "provincia": "Antartica Chilena",
-      "grupoZona": "Magallanes",
-      "comunas": [
-        "Antartica"
-      ],
-      "porcentaje": 840.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Ancud",
-      "tipo": "comuna",
-      "region": "Los Lagos",
-      "provincia": "Chiloe",
-      "grupoZona": "Chiloe",
-      "comunas": [
-        "Ancud"
-      ],
-      "porcentaje": 56.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Castro",
-      "tipo": "comuna",
-      "region": "Los Lagos",
-      "provincia": "Chiloe",
-      "grupoZona": "Chiloe",
-      "comunas": [
-        "Castro"
-      ],
-      "porcentaje": 56.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Chonchi",
-      "tipo": "comuna",
-      "region": "Los Lagos",
-      "provincia": "Chiloe",
-      "grupoZona": "Chiloe",
-      "comunas": [
-        "Chonchi"
-      ],
-      "porcentaje": 56.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Curaco de Velez",
-      "tipo": "comuna",
-      "region": "Los Lagos",
-      "provincia": "Chiloe",
-      "grupoZona": "Chiloe",
-      "comunas": [
-        "Curaco de Velez"
-      ],
-      "porcentaje": 98.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Dalcahue",
-      "tipo": "comuna",
-      "region": "Los Lagos",
-      "provincia": "Chiloe",
-      "grupoZona": "Chiloe",
-      "comunas": [
-        "Dalcahue"
-      ],
-      "porcentaje": 56.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Puqueldon",
-      "tipo": "comuna",
-      "region": "Los Lagos",
-      "provincia": "Chiloe",
-      "grupoZona": "Chiloe",
-      "comunas": [
-        "Puqueldon"
-      ],
-      "porcentaje": 98.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Queilen",
-      "tipo": "comuna",
-      "region": "Los Lagos",
-      "provincia": "Chiloe",
-      "grupoZona": "Chiloe",
-      "comunas": [
-        "Queilen"
-      ],
-      "porcentaje": 56.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Quellon",
-      "tipo": "comuna",
-      "region": "Los Lagos",
-      "provincia": "Chiloe",
-      "grupoZona": "Chiloe",
-      "comunas": [
-        "Quellon"
-      ],
-      "porcentaje": 56.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Quemchi",
-      "tipo": "comuna",
-      "region": "Los Lagos",
-      "provincia": "Chiloe",
-      "grupoZona": "Chiloe",
-      "comunas": [
-        "Quemchi"
-      ],
-      "porcentaje": 56.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Quinchao",
-      "tipo": "comuna",
-      "region": "Los Lagos",
-      "provincia": "Chiloe",
-      "grupoZona": "Chiloe",
-      "comunas": [
-        "Quinchao"
-      ],
-      "porcentaje": 98.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Chaiten",
-      "tipo": "comuna",
-      "region": "Los Lagos",
-      "provincia": "Palena",
-      "grupoZona": "Palena",
-      "comunas": [
-        "Chaiten"
-      ],
-      "porcentaje": 126.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Futaleufu",
-      "tipo": "comuna",
-      "region": "Los Lagos",
-      "provincia": "Palena",
-      "grupoZona": "Palena",
-      "comunas": [
-        "Futaleufu"
-      ],
-      "porcentaje": 126.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Hualaihue",
-      "tipo": "comuna",
-      "region": "Los Lagos",
-      "provincia": "Palena",
-      "grupoZona": "Palena",
-      "comunas": [
-        "Hualaihue"
-      ],
-      "porcentaje": 126.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    },
-    {
-      "nombre": "Palena",
-      "tipo": "comuna",
-      "region": "Los Lagos",
-      "provincia": "Palena",
-      "grupoZona": "Palena",
-      "comunas": [
-        "Palena"
-      ],
-      "porcentaje": 126.0,
-      "estado": "referencial_pendiente_validacion",
-      "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria",
-      "url": "https://iberocapital.cl/calculadora-sueldo",
-      "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado."
-    }
-  ],
-  "automatizacionSugerida": {
-    "estado": "parcial",
-    "parser": "Buscar en valores_y_fechas/renta/{anio}/personas_naturales.html la seccion 'Sueldo grado 1-A Escala Unica de Sueldos' y extraer valores por mes; complementar con circulares mensuales cuando corresponda.",
-    "noUsarSi": "La tabla disponible corresponde a ano tributario y no al mes calendario de la liquidacion, salvo validacion manual."
-  }
+    { "nombre": "Arica", "tipo": "comuna", "region": "Arica y Parinacota", "provincia": "Arica", "grupoZona": "Arica y Parinacota", "comunas": ["Arica"], "porcentaje": 56.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "Camarones", "tipo": "comuna", "region": "Arica y Parinacota", "provincia": "Arica", "grupoZona": "Arica y Parinacota", "comunas": ["Camarones"], "porcentaje": 77.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "Putre", "tipo": "comuna", "region": "Arica y Parinacota", "provincia": "Parinacota", "grupoZona": "Arica y Parinacota", "comunas": ["Putre"], "porcentaje": 112.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "General Lagos", "tipo": "comuna", "region": "Arica y Parinacota", "provincia": "Parinacota", "grupoZona": "Arica y Parinacota", "comunas": ["General Lagos"], "porcentaje": 77.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+
+    { "nombre": "Iquique", "tipo": "comuna", "region": "Tarapacá", "provincia": "Iquique", "grupoZona": "Tarapacá", "comunas": ["Iquique"], "porcentaje": 56.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "Alto Hospicio", "tipo": "comuna", "region": "Tarapacá", "provincia": "Iquique", "grupoZona": "Tarapacá", "comunas": ["Alto Hospicio"], "porcentaje": 56.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "Pozo Almonte", "tipo": "comuna", "region": "Tarapacá", "provincia": "Tamarugal", "grupoZona": "Tarapacá", "comunas": ["Pozo Almonte"], "porcentaje": 77.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "Camiña", "tipo": "comuna", "region": "Tarapacá", "provincia": "Tamarugal", "grupoZona": "Tarapacá", "comunas": ["Camiña"], "porcentaje": 112.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "Colchane", "tipo": "comuna", "region": "Tarapacá", "provincia": "Tamarugal", "grupoZona": "Tarapacá", "comunas": ["Colchane"], "porcentaje": 112.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "Huara", "tipo": "comuna", "region": "Tarapacá", "provincia": "Tamarugal", "grupoZona": "Tarapacá", "comunas": ["Huara"], "porcentaje": 77.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "Pica", "tipo": "comuna", "region": "Tarapacá", "provincia": "Tamarugal", "grupoZona": "Tarapacá", "comunas": ["Pica"], "porcentaje": 77.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+
+    { "nombre": "Aysén", "tipo": "comuna", "region": "Aysén", "provincia": "Aysén", "grupoZona": "Aysén", "comunas": ["Aysén"], "porcentaje": 147.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "Coyhaique", "tipo": "comuna", "region": "Aysén", "provincia": "Coyhaique", "grupoZona": "Aysén", "comunas": ["Coyhaique"], "porcentaje": 147.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "Chile Chico", "tipo": "comuna", "region": "Aysén", "provincia": "General Carrera", "grupoZona": "Aysén", "comunas": ["Chile Chico"], "porcentaje": 175.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "Cisnes", "tipo": "comuna", "region": "Aysén", "provincia": "Aysén", "grupoZona": "Aysén", "comunas": ["Cisnes"], "porcentaje": 175.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "Cochrane", "tipo": "comuna", "region": "Aysén", "provincia": "Capitán Prat", "grupoZona": "Aysén", "comunas": ["Cochrane"], "porcentaje": 175.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "Guaitecas", "tipo": "comuna", "region": "Aysén", "provincia": "Aysén", "grupoZona": "Aysén", "comunas": ["Guaitecas"], "porcentaje": 126.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "Lago Verde", "tipo": "comuna", "region": "Aysén", "provincia": "Coyhaique", "grupoZona": "Aysén", "comunas": ["Lago Verde"], "porcentaje": 175.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "O'Higgins", "tipo": "comuna", "region": "Aysén", "provincia": "Capitán Prat", "grupoZona": "Aysén", "comunas": ["O'Higgins"], "porcentaje": 175.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "Río Ibáñez", "tipo": "comuna", "region": "Aysén", "provincia": "General Carrera", "grupoZona": "Aysén", "comunas": ["Río Ibáñez"], "porcentaje": 175.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "Tortel", "tipo": "comuna", "region": "Aysén", "provincia": "Capitán Prat", "grupoZona": "Aysén", "comunas": ["Tortel"], "porcentaje": 175.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+
+    { "nombre": "Punta Arenas", "tipo": "comuna", "region": "Magallanes", "provincia": "Magallanes", "grupoZona": "Magallanes", "comunas": ["Punta Arenas"], "porcentaje": 98.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "Laguna Blanca", "tipo": "comuna", "region": "Magallanes", "provincia": "Magallanes", "grupoZona": "Magallanes", "comunas": ["Laguna Blanca"], "porcentaje": 133.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "Río Verde", "tipo": "comuna", "region": "Magallanes", "provincia": "Magallanes", "grupoZona": "Magallanes", "comunas": ["Río Verde"], "porcentaje": 98.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "San Gregorio", "tipo": "comuna", "region": "Magallanes", "provincia": "Magallanes", "grupoZona": "Magallanes", "comunas": ["San Gregorio"], "porcentaje": 98.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "Natales", "tipo": "comuna", "region": "Magallanes", "provincia": "Última Esperanza", "grupoZona": "Magallanes", "comunas": ["Natales"], "porcentaje": 119.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "Torres del Paine", "tipo": "comuna", "region": "Magallanes", "provincia": "Última Esperanza", "grupoZona": "Magallanes", "comunas": ["Torres del Paine"], "porcentaje": 119.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "Porvenir", "tipo": "comuna", "region": "Magallanes", "provincia": "Tierra del Fuego", "grupoZona": "Magallanes", "comunas": ["Porvenir"], "porcentaje": 119.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "Primavera", "tipo": "comuna", "region": "Magallanes", "provincia": "Tierra del Fuego", "grupoZona": "Magallanes", "comunas": ["Primavera"], "porcentaje": 119.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "Timaukel", "tipo": "comuna", "region": "Magallanes", "provincia": "Tierra del Fuego", "grupoZona": "Magallanes", "comunas": ["Timaukel"], "porcentaje": 119.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "Cabo de Hornos", "tipo": "comuna", "region": "Magallanes", "provincia": "Antártica Chilena", "grupoZona": "Magallanes", "comunas": ["Cabo de Hornos"], "porcentaje": 147.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "Antártica", "tipo": "comuna", "region": "Magallanes", "provincia": "Antártica Chilena", "grupoZona": "Magallanes", "comunas": ["Antártica"], "porcentaje": 840.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+
+    { "nombre": "Ancud", "tipo": "comuna", "region": "Los Lagos", "provincia": "Chiloé", "grupoZona": "Los Lagos (Chiloé)", "comunas": ["Ancud"], "porcentaje": 56.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "Castro", "tipo": "comuna", "region": "Los Lagos", "provincia": "Chiloé", "grupoZona": "Los Lagos (Chiloé)", "comunas": ["Castro"], "porcentaje": 56.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "Chonchi", "tipo": "comuna", "region": "Los Lagos", "provincia": "Chiloé", "grupoZona": "Los Lagos (Chiloé)", "comunas": ["Chonchi"], "porcentaje": 56.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "Curaco de Vélez", "tipo": "comuna", "region": "Los Lagos", "provincia": "Chiloé", "grupoZona": "Los Lagos (Chiloé)", "comunas": ["Curaco de Vélez"], "porcentaje": 98.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "Dalcahue", "tipo": "comuna", "region": "Los Lagos", "provincia": "Chiloé", "grupoZona": "Los Lagos (Chiloé)", "comunas": ["Dalcahue"], "porcentaje": 56.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "Puqueldón", "tipo": "comuna", "region": "Los Lagos", "provincia": "Chiloé", "grupoZona": "Los Lagos (Chiloé)", "comunas": ["Puqueldón"], "porcentaje": 98.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "Queilen", "tipo": "comuna", "region": "Los Lagos", "provincia": "Chiloé", "grupoZona": "Los Lagos (Chiloé)", "comunas": ["Queilen"], "porcentaje": 56.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "Quellón", "tipo": "comuna", "region": "Los Lagos", "provincia": "Chiloé", "grupoZona": "Los Lagos (Chiloé)", "comunas": ["Quellón"], "porcentaje": 56.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "Quemchi", "tipo": "comuna", "region": "Los Lagos", "provincia": "Chiloé", "grupoZona": "Los Lagos (Chiloé)", "comunas": ["Quemchi"], "porcentaje": 56.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "Quinchao", "tipo": "comuna", "region": "Los Lagos", "provincia": "Chiloé", "grupoZona": "Los Lagos (Chiloé)", "comunas": ["Quinchao"], "porcentaje": 98.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+
+    { "nombre": "Chaitén", "tipo": "comuna", "region": "Los Lagos", "provincia": "Palena", "grupoZona": "Los Lagos (Palena)", "comunas": ["Chaitén"], "porcentaje": 126.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "Futaleufú", "tipo": "comuna", "region": "Los Lagos", "provincia": "Palena", "grupoZona": "Los Lagos (Palena)", "comunas": ["Futaleufú"], "porcentaje": 126.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "Hualaihué", "tipo": "comuna", "region": "Los Lagos", "provincia": "Palena", "grupoZona": "Los Lagos (Palena)", "comunas": ["Hualaihué"], "porcentaje": 126.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." },
+    { "nombre": "Palena", "tipo": "comuna", "region": "Los Lagos", "provincia": "Palena", "grupoZona": "Los Lagos (Palena)", "comunas": ["Palena"], "porcentaje": 126.0, "estado": "referencial_pendiente_validacion", "fuente": "IberoCapital calculadora sueldo / pendiente validacion contra DL 249 o fuente primaria", "url": "https://iberocapital.cl/calculadora-sueldo", "nota": "Porcentaje cargado para beta cerrada desde referencia secundaria entregada por el usuario. Validar contra DL 249, SII, Contraloria u otra fuente primaria antes de marcar manual_validado." }
+  ]
 }
