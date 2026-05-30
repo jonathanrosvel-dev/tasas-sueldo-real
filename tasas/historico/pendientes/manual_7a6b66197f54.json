@@ -1,6 +1,6 @@
 {
   "id": "manual_7a6b66197f54",
-  "estado": "pendiente",
+  "estado": "aprobado",
   "fechaCreacion": "2026-05-30T05:07:37.291166-04:00",
   "tipo": "revision_indicador_manual",
   "titulo": "Comisiones AFP",
@@ -17,5 +17,11 @@
     "enviado": true,
     "fechaEnvio": "2026-05-30T05:07:39.935682-04:00",
     "messageId": 99
+  },
+  "resueltoPorTelegram": {
+    "userId": "8506946339",
+    "username": null,
+    "fecha": "2026-05-30T12:45:08.681Z",
+    "decision": "ok"
   }
 }
