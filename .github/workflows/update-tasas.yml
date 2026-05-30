@@ -28,6 +28,9 @@ jobs:
       - name: Ejecutar actualización de tasas
         run: python scripts/update_tasas.py update-current
 
+      - name: Sincronizar UF diaria vigente
+        run: python scripts/sync_uf_diaria_from_current.py
+
       - name: Crear pendientes de tasas actuales
         run: python scripts/create_tasas_pending_from_current.py
 
