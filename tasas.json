@@ -1,14 +1,14 @@
 {
-  "version": "2026-05-31",
-  "fechaActualizacion": "2026-05-31",
+  "version": "2026-06-01",
+  "fechaActualizacion": "2026-06-01",
   "periodo": {
     "anio": 2026,
-    "mes": 5,
-    "mesNombre": "Mayo"
+    "mes": 6,
+    "mesNombre": "Junio"
   },
-  "utm": 70588,
-  "uf": 40610.69,
-  "ufFecha": "2026-05-31",
+  "utm": 71506,
+  "uf": 40627.62,
+  "ufFecha": "2026-06-01",
   "ufPolitica": "valor_dia_actual",
   "topes": {
     "afpSaludUf": 90.0,
