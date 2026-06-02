@@ -1,0 +1,21 @@
+{
+  "id": "manual_c60f639fd958",
+  "estado": "pendiente",
+  "fechaCreacion": "2026-06-02T07:11:51.887375-04:00",
+  "tipo": "revision_indicador_manual",
+  "titulo": "Ingreso Mínimo Mensual",
+  "periodo": "2026-06-02",
+  "valorActual": "Dato vigente guardado en GitHub",
+  "valorDetectado": "Cambio detectado en fuente revisada",
+  "motivo": "No pude revisar esta fuente: HTTPSConnectionPool(host='www.dt.gob.cl', port=443): Max retries exceeded with url: /portal/1628/w3-propertyvalue-145768.html (Caused by ConnectTimeoutError(<HTTPSConnection(host='www.dt.gob.cl', port=443) at 0x7f2b0e09d2d0>, 'Connection to www.dt.gob.cl timed out. (connect timeout=45)'))",
+  "descripcion": "El IMM afecta cálculos como la gratificación legal estimada. Cambia cuando se publica una ley o actualización oficial.",
+  "fuente": "https://www.dt.gob.cl/portal/1628/w3-propertyvalue-145768.html",
+  "targetFile": "tasas/historico/manual/laboral.json",
+  "linkGitHub": "https://github.com/jonathanrosvel-dev/tasas-sueldo-real/blob/main/tasas/historico/manual/laboral.json",
+  "action": null,
+  "telegram": {
+    "enviado": true,
+    "fechaEnvio": "2026-06-02T07:11:55.505393-04:00",
+    "messageId": 121
+  }
+}
