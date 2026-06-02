@@ -1,6 +1,6 @@
 {
   "id": "manual_f59316316c94",
-  "estado": "pendiente",
+  "estado": "aprobado",
   "fechaCreacion": "2026-06-02T07:11:51.887533-04:00",
   "tipo": "revision_indicador_manual",
   "titulo": "Seguro de cesantía",
@@ -17,5 +17,11 @@
     "enviado": true,
     "fechaEnvio": "2026-06-02T07:11:56.966025-04:00",
     "messageId": 123
+  },
+  "resueltoPorTelegram": {
+    "userId": "8506946339",
+    "username": null,
+    "fecha": "2026-06-02T14:05:56.094Z",
+    "decision": "ok"
   }
 }
