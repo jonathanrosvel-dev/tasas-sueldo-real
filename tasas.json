@@ -1,14 +1,14 @@
 {
-  "version": "2026-06-05",
-  "fechaActualizacion": "2026-06-05",
+  "version": "2026-06-06",
+  "fechaActualizacion": "2026-06-06",
   "periodo": {
     "anio": 2026,
     "mes": 6,
     "mesNombre": "Junio"
   },
   "utm": 71506,
-  "uf": 40695.38,
-  "ufFecha": "2026-06-05",
+  "uf": 40712.34,
+  "ufFecha": "2026-06-06",
   "ufPolitica": "valor_dia_actual",
   "topes": {
     "afpSaludUf": 90.0,
@@ -112,7 +112,7 @@
     "utm": "online",
     "uf": "online_sii",
     "impuestoUnico": "online",
-    "afp": "respaldo",
+    "afp": "online",
     "topes": "manual_validado",
     "imm": "manual_validado",
     "salud": "ok",
@@ -122,7 +122,7 @@
     "utm": "https://www.sii.cl/valores_y_fechas/utm/utm2026.htm",
     "uf": "https://www.sii.cl/valores_y_fechas/uf/uf2026.htm",
     "impuestoUnico": "https://www.sii.cl/valores_y_fechas/impuesto_2da_categoria/impuesto2026.htm",
-    "afp": "tasas/historico/manual/afp_comisiones.json",
+    "afp": "https://www.spensiones.cl/portal/institucional/594/w3-article-2810.html",
     "topes": "tasas/historico/manual/topes.json",
     "imm": "tasas/historico/manual/laboral.json",
     "salud": "cotizacion_legal_7_por_ciento",
