@@ -1,6 +1,6 @@
 {
   "id": "manual_b266ede57544",
-  "estado": "pendiente",
+  "estado": "aprobado",
   "fechaCreacion": "2026-06-09T06:25:48.861766-04:00",
   "tipo": "revision_indicador_manual",
   "titulo": "Topes imponibles AFP/salud y seguro de cesantía",
@@ -17,5 +17,11 @@
     "enviado": true,
     "fechaEnvio": "2026-06-09T06:25:51.219041-04:00",
     "messageId": 156
+  },
+  "resueltoPorTelegram": {
+    "userId": "8506946339",
+    "username": null,
+    "fecha": "2026-06-09T16:07:00.840Z",
+    "decision": "ok"
   }
 }
