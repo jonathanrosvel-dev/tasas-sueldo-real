@@ -1,14 +1,14 @@
 {
   "descripcion": "Hashes de monitoreo para indicadores manuales o semiautomáticos",
   "fechaCreacion": "2026-05-28",
-  "fechaActualizacion": "2026-06-18",
+  "fechaActualizacion": "2026-06-19",
   "fuentes": {
     "topes_previsionales|https://www.spensiones.cl/portal/institucional/594/w3-propertyvalue-9923.html": {
       "indicador": "topes_previsionales",
       "nombre": "Topes imponibles AFP/salud y seguro de cesantía",
       "url": "https://www.spensiones.cl/portal/institucional/594/w3-propertyvalue-9923.html",
       "hash": "aeaff38ddfb2f09a0c18f4633f5d3205c63e7b684decf6708a534cb771895759",
-      "fechaRevision": "2026-06-18",
+      "fechaRevision": "2026-06-19",
       "keywordCounts": {
         "tope imponible": 0,
         "afiliados": 8,
@@ -23,7 +23,7 @@
       "nombre": "Ingreso Mínimo Mensual",
       "url": "https://www.dt.gob.cl/portal/1628/w3-propertyvalue-145768.html",
       "hash": "9304736e23d47bbb104566a98b17c4aee24417ce4151943e2952c00f13806d84",
-      "fechaRevision": "2026-06-18",
+      "fechaRevision": "2026-06-19",
       "keywordCounts": {
         "ingreso mínimo": 0,
         "sueldo mínimo": 0,
@@ -38,7 +38,7 @@
       "nombre": "Seguro de cesantía",
       "url": "https://www.dt.gob.cl/portal/1628/w3-propertyvalue-145768.html",
       "hash": "9304736e23d47bbb104566a98b17c4aee24417ce4151943e2952c00f13806d84",
-      "fechaRevision": "2026-06-18",
+      "fechaRevision": "2026-06-19",
       "keywordCounts": {
         "seguro de cesantía": 0,
         "contrato indefinido": 0,
@@ -53,7 +53,7 @@
       "nombre": "Comisiones AFP",
       "url": "https://www.spensiones.cl/portal/institucional/594/w3-article-2810.html",
       "hash": "00a606a82eaf69314afcdf8be90efcf074db2b7335bec94b41736e09517e8b21",
-      "fechaRevision": "2026-06-18",
+      "fechaRevision": "2026-06-19",
       "keywordCounts": {
         "capital": 3,
         "cuprum": 1,
@@ -71,7 +71,7 @@
       "nombre": "Porcentajes de zona extrema DL 889 / DL 249",
       "url": "https://www.bcn.cl/leychile/navegar?idNorma=6368",
       "hash": "f9a20e7a2db07640d6e385fc159c12c5a9e498d455481924e243033bf38510c2",
-      "fechaRevision": "2026-06-18",
+      "fechaRevision": "2026-06-19",
       "keywordCounts": {
         "asignación de zona": 0,
         "zona": 0,
@@ -89,7 +89,7 @@
       "nombre": "Modificaciones normativa zona extrema",
       "url": "https://www.bcn.cl/leychile/navegar?i=1203976",
       "hash": "f9a20e7a2db07640d6e385fc159c12c5a9e498d455481924e243033bf38510c2",
-      "fechaRevision": "2026-06-18",
+      "fechaRevision": "2026-06-19",
       "keywordCounts": {
         "zona": 0,
         "asignación": 0,
@@ -104,7 +104,7 @@
       "nombre": "Normativa relacionada zona extrema",
       "url": "https://www.bcn.cl/leychile/navegar?i=6390",
       "hash": "f9a20e7a2db07640d6e385fc159c12c5a9e498d455481924e243033bf38510c2",
-      "fechaRevision": "2026-06-18",
+      "fechaRevision": "2026-06-19",
       "keywordCounts": {
         "zona": 0,
         "asignación": 0,
