@@ -1,0 +1,21 @@
+{
+  "id": "manual_19959bc41f8f",
+  "estado": "pendiente",
+  "fechaCreacion": "2026-07-13T06:15:12.917807-04:00",
+  "tipo": "revision_indicador_manual",
+  "titulo": "Comisiones AFP",
+  "periodo": "2026-07-13",
+  "valorActual": "Dato vigente guardado en GitHub",
+  "valorDetectado": "Cambio detectado en fuente revisada",
+  "motivo": "No pude revisar esta fuente: 403 Client Error: Forbidden for url: https://www.spensiones.cl/portal/institucional/594/w3-article-2810.html",
+  "descripcion": "Las comisiones AFP pueden cambiar y conviene revisar la fuente cuando detectemos movimientos.",
+  "fuente": "https://www.spensiones.cl/portal/institucional/594/w3-article-2810.html",
+  "targetFile": "tasas/historico/manual/afp_comisiones.json",
+  "linkGitHub": "https://github.com/jonathanrosvel-dev/tasas-sueldo-real/blob/main/tasas/historico/manual/afp_comisiones.json",
+  "action": null,
+  "telegram": {
+    "enviado": true,
+    "fechaEnvio": "2026-07-13T06:15:15.023742-04:00",
+    "messageId": 174
+  }
+}
