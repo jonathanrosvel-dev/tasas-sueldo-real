@@ -1,0 +1,21 @@
+{
+  "id": "manual_cef5748f82a9",
+  "estado": "pendiente",
+  "fechaCreacion": "2026-08-25T03:33:23.402134-04:00",
+  "tipo": "revision_indicador_manual",
+  "titulo": "Topes imponibles AFP/salud y seguro de cesantía",
+  "periodo": "2026-08-25",
+  "valorActual": "Dato vigente guardado en GitHub",
+  "valorDetectado": "Cambio detectado en fuente revisada",
+  "motivo": "La fuente cambió desde la última revisión.",
+  "descripcion": "Estos topes limitan la base usada para cotizaciones previsionales. Pueden cambiar por resolución o actualización normativa.\n\nMenciones relevantes detectadas: afiliados: 8, uf: 2",
+  "fuente": "https://www.spensiones.cl/portal/institucional/594/w3-propertyvalue-9923.html",
+  "targetFile": "tasas/historico/manual/topes.json",
+  "linkGitHub": "https://github.com/jonathanrosvel-dev/tasas-sueldo-real/blob/main/tasas/historico/manual/topes.json",
+  "action": null,
+  "telegram": {
+    "enviado": true,
+    "fechaEnvio": "2026-08-25T03:33:26.894715-04:00",
+    "messageId": 181
+  }
+}
