@@ -1,0 +1,21 @@
+{
+  "id": "manual_45720038dfce",
+  "estado": "pendiente",
+  "fechaCreacion": "2026-09-17T09:15:49.871349-03:00",
+  "tipo": "revision_indicador_manual",
+  "titulo": "Comisiones AFP",
+  "periodo": "2026-09-17",
+  "valorActual": "Dato vigente guardado en GitHub",
+  "valorDetectado": "Cambio detectado en fuente revisada",
+  "motivo": "La fuente cambió desde la última revisión.",
+  "descripcion": "Las comisiones AFP pueden cambiar y conviene revisar la fuente cuando detectemos movimientos.\n\nMenciones relevantes detectadas: capital: 3, cuprum: 1, habitat: 1, modelo: 1, planvital: 1, provida: 1, uno: 2",
+  "fuente": "https://www.spensiones.cl/portal/institucional/594/w3-article-2810.html",
+  "targetFile": "tasas/historico/manual/afp_comisiones.json",
+  "linkGitHub": "https://github.com/jonathanrosvel-dev/tasas-sueldo-real/blob/main/tasas/historico/manual/afp_comisiones.json",
+  "action": null,
+  "telegram": {
+    "enviado": true,
+    "fechaEnvio": "2026-09-17T09:15:53.320674-03:00",
+    "messageId": 182
+  }
+}
