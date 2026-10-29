@@ -1,0 +1,21 @@
+{
+  "id": "manual_850ed2c0f1d3",
+  "estado": "pendiente",
+  "fechaCreacion": "2026-10-29T10:46:38.267251-03:00",
+  "tipo": "revision_indicador_manual",
+  "titulo": "Normativa relacionada zona extrema",
+  "periodo": "2026-10-29",
+  "valorActual": "Dato vigente guardado en GitHub",
+  "valorDetectado": "Cambio detectado en fuente revisada",
+  "motivo": "No pude revisar esta fuente: 403 Client Error: Forbidden for url: https://www.bcn.cl/leychile/navegar?i=6390",
+  "descripcion": "Fuente complementaria para revisar posibles cambios normativos vinculados a zona extrema.",
+  "fuente": "https://www.bcn.cl/leychile/navegar?i=6390",
+  "targetFile": "tasas/historico/manual/zonas_extremas.json",
+  "linkGitHub": "https://github.com/jonathanrosvel-dev/tasas-sueldo-real/blob/main/tasas/historico/manual/zonas_extremas.json",
+  "action": null,
+  "telegram": {
+    "enviado": true,
+    "fechaEnvio": "2026-10-29T10:46:42.492081-03:00",
+    "messageId": 196
+  }
+}
