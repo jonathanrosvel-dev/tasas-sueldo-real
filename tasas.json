@@ -1,14 +1,14 @@
 {
-  "version": "2026-11-02",
-  "fechaActualizacion": "2026-11-02",
+  "version": "2026-11-03",
+  "fechaActualizacion": "2026-11-03",
   "periodo": {
     "anio": 2026,
     "mes": 11,
     "mesNombre": "Noviembre"
   },
   "utm": 72440,
-  "uf": 41258.26,
-  "ufFecha": "2026-11-02",
+  "uf": 41263.57,
+  "ufFecha": "2026-11-03",
   "ufPolitica": "valor_dia_actual",
   "topes": {
     "afpSaludUf": 90.0,
