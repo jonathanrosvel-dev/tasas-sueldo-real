@@ -1,0 +1,21 @@
+{
+  "id": "manual_6c8b4cad5a1a",
+  "estado": "pendiente",
+  "fechaCreacion": "2026-11-06T11:39:45.754477-03:00",
+  "tipo": "revision_indicador_manual",
+  "titulo": "Ingreso Mínimo Mensual",
+  "periodo": "2026-11-06",
+  "valorActual": "Dato vigente guardado en GitHub",
+  "valorDetectado": "Cambio detectado en fuente revisada",
+  "motivo": "La fuente cambió desde la última revisión.",
+  "descripcion": "El IMM afecta cálculos como la gratificación legal estimada. Cambia cuando se publica una ley o actualización oficial.\n\nMenciones relevantes detectadas: ingreso mínimo: 1, trabajadores: 2, ley: 3",
+  "fuente": "https://www.dt.gob.cl/portal/1628/w3-propertyvalue-145768.html",
+  "targetFile": "tasas/historico/manual/laboral.json",
+  "linkGitHub": "https://github.com/jonathanrosvel-dev/tasas-sueldo-real/blob/main/tasas/historico/manual/laboral.json",
+  "action": null,
+  "telegram": {
+    "enviado": true,
+    "fechaEnvio": "2026-11-06T11:39:49.667596-03:00",
+    "messageId": 221
+  }
+}
