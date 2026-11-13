@@ -1,14 +1,14 @@
 {
   "descripcion": "Hashes de monitoreo para indicadores manuales o semiautomáticos",
   "fechaCreacion": "2026-05-28",
-  "fechaActualizacion": "2026-11-12",
+  "fechaActualizacion": "2026-11-13",
   "fuentes": {
     "topes_previsionales|https://www.spensiones.cl/portal/institucional/594/w3-propertyvalue-9923.html": {
       "indicador": "topes_previsionales",
       "nombre": "Topes imponibles AFP/salud y seguro de cesantía",
       "url": "https://www.spensiones.cl/portal/institucional/594/w3-propertyvalue-9923.html",
       "hash": "39c98e7a0e34419fe864091e9a3492b9add9334f3f7ae4e398f2d7d413f055ff",
-      "fechaRevision": "2026-11-12",
+      "fechaRevision": "2026-11-13",
       "keywordCounts": {
         "tope imponible": 0,
         "afiliados": 8,
@@ -23,7 +23,7 @@
       "nombre": "Ingreso Mínimo Mensual",
       "url": "https://www.dt.gob.cl/portal/1628/w3-propertyvalue-145768.html",
       "hash": "fae02933fc7c1c0b19b7942681cda43f0f35da829f0110b1fdcb377afe9f645b",
-      "fechaRevision": "2026-11-12",
+      "fechaRevision": "2026-11-13",
       "keywordCounts": {
         "ingreso mínimo": 1,
         "sueldo mínimo": 0,
@@ -38,7 +38,7 @@
       "nombre": "Seguro de cesantía",
       "url": "https://www.dt.gob.cl/portal/1628/w3-propertyvalue-145768.html",
       "hash": "fae02933fc7c1c0b19b7942681cda43f0f35da829f0110b1fdcb377afe9f645b",
-      "fechaRevision": "2026-11-12",
+      "fechaRevision": "2026-11-13",
       "keywordCounts": {
         "seguro de cesantía": 0,
         "contrato indefinido": 0,
@@ -53,7 +53,7 @@
       "nombre": "Comisiones AFP",
       "url": "https://www.spensiones.cl/portal/institucional/594/w3-article-2810.html",
       "hash": "6887388fe2fec5f3d29b3f37e8f428b288bd3d8acfdf2683096b1e09ebb88383",
-      "fechaRevision": "2026-11-12",
+      "fechaRevision": "2026-11-13",
       "keywordCounts": {
         "capital": 3,
         "cuprum": 1,
